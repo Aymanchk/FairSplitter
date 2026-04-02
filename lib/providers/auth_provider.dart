@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 
@@ -8,6 +9,9 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _userName;
   String? _userEmail;
+  String? _userPhone;
+  String? _userAvatarUrl;
+  int? _userId;
   String? _error;
   bool _isGuest = false;
 
@@ -15,9 +19,20 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
+  String? get userPhone => _userPhone;
+  String? get userAvatarUrl => _userAvatarUrl;
+  int? get userId => _userId;
   String? get error => _error;
   bool get isGuest => _isGuest;
   ApiService get api => _api;
+
+  void _setUserFromMap(Map<String, dynamic> user) {
+    _userId = user['id'] as int?;
+    _userName = user['name'] as String?;
+    _userEmail = user['email'] as String?;
+    _userPhone = user['phone'] as String?;
+    _userAvatarUrl = user['avatar'] as String?;
+  }
 
   Future<bool> register({
     required String name,
@@ -37,12 +52,8 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
       );
 
-      final token = result['token'] as String;
-      final user = result['user'] as Map<String, dynamic>;
-
-      _api.setToken(token);
-      _userName = user['name'] as String;
-      _userEmail = user['email'] as String;
+      _api.setToken(result['token'] as String);
+      _setUserFromMap(result['user'] as Map<String, dynamic>);
       _isLoggedIn = true;
       _isGuest = false;
       _isLoading = false;
@@ -72,12 +83,8 @@ class AuthProvider extends ChangeNotifier {
     try {
       final result = await _api.login(email: email, password: password);
 
-      final token = result['token'] as String;
-      final user = result['user'] as Map<String, dynamic>;
-
-      _api.setToken(token);
-      _userName = user['name'] as String;
-      _userEmail = user['email'] as String;
+      _api.setToken(result['token'] as String);
+      _setUserFromMap(result['user'] as Map<String, dynamic>);
       _isLoggedIn = true;
       _isGuest = false;
       _isLoading = false;
@@ -96,6 +103,40 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({String? name, String? email, String? phone}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await _api.updateProfile(name: name, email: email, phone: phone);
+      _setUserFromMap(result['user'] as Map<String, dynamic>);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Нет подключения к серверу';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> uploadAvatar(File imageFile) async {
+    try {
+      final result = await _api.uploadAvatar(imageFile);
+      _setUserFromMap(result['user'] as Map<String, dynamic>);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   void continueAsGuest() {
     _isGuest = true;
     _isLoggedIn = true;
@@ -109,6 +150,9 @@ class AuthProvider extends ChangeNotifier {
     _isGuest = false;
     _userName = null;
     _userEmail = null;
+    _userPhone = null;
+    _userAvatarUrl = null;
+    _userId = null;
     _api.setToken(null);
     notifyListeners();
   }

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Bill
+from .models import Bill, ChatRoom, Message, Debt, FriendGroup, Notification
 
 User = get_user_model()
 
@@ -26,10 +26,27 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="first_name")
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "name", "email", "phone"]
+        fields = ["id", "name", "email", "phone", "avatar"]
+
+    def get_avatar(self, obj):
+        if obj.avatar:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="first_name", required=False)
+
+    class Meta:
+        model = User
+        fields = ["name", "email", "phone"]
 
 
 class LoginSerializer(serializers.Serializer):
@@ -47,6 +64,7 @@ class BillSerializer(serializers.ModelSerializer):
             "items",
             "people",
             "assignments",
+            "title",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
@@ -54,3 +72,96 @@ class BillSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
+
+
+class DebtSerializer(serializers.ModelSerializer):
+    from_user = UserSerializer(read_only=True)
+    to_user = UserSerializer(read_only=True)
+    from_user_id = serializers.IntegerField(write_only=True)
+    to_user_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Debt
+        fields = [
+            "id", "from_user", "to_user", "from_user_id", "to_user_id",
+            "amount", "bill", "description", "is_paid",
+            "created_at", "paid_at",
+        ]
+        read_only_fields = ["id", "created_at", "paid_at"]
+
+    def create(self, validated_data):
+        from_user_id = validated_data.pop("from_user_id")
+        to_user_id = validated_data.pop("to_user_id")
+        validated_data["from_user"] = User.objects.get(id=from_user_id)
+        validated_data["to_user"] = User.objects.get(id=to_user_id)
+        return super().create(validated_data)
+
+
+class FriendGroupSerializer(serializers.ModelSerializer):
+    members = UserSerializer(many=True, read_only=True)
+    member_ids = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
+    member_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FriendGroup
+        fields = ["id", "name", "members", "member_ids", "member_count", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+    def get_member_count(self, obj):
+        return obj.members.count()
+
+    def create(self, validated_data):
+        member_ids = validated_data.pop("member_ids", [])
+        validated_data["owner"] = self.context["request"].user
+        group = super().create(validated_data)
+        if member_ids:
+            group.members.set(member_ids)
+        return group
+
+    def update(self, instance, validated_data):
+        member_ids = validated_data.pop("member_ids", None)
+        instance = super().update(instance, validated_data)
+        if member_ids is not None:
+            instance.members.set(member_ids)
+        return instance
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "type", "title", "body", "data", "is_read", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Message
+        fields = ["id", "sender", "text", "created_at", "is_read"]
+
+
+class ChatRoomSerializer(serializers.ModelSerializer):
+    participants = UserSerializer(many=True, read_only=True)
+    last_message = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatRoom
+        fields = ["id", "participants", "last_message", "unread_count", "created_at"]
+
+    def get_last_message(self, obj):
+        msg = obj.messages.order_by("-created_at").first()
+        if msg:
+            return MessageSerializer(msg, context=self.context).data
+        return None
+
+    def get_unread_count(self, obj):
+        user = self.context.get("request_user") or (
+            self.context.get("request").user if self.context.get("request") else None
+        )
+        if user:
+            return obj.messages.filter(is_read=False).exclude(sender=user).count()
+        return 0

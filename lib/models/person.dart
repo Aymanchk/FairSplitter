@@ -15,6 +15,14 @@ class Person {
   final String id;
   String name;
   Color avatarColor;
+  int? userId;
+  String? avatarUrl;
 
-  Person({required this.id, required this.name, required this.avatarColor});
+  Person({
+    required this.id,
+    required this.name,
+    required this.avatarColor,
+    this.userId,
+    this.avatarUrl,
+  });
 }

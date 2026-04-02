@@ -55,12 +55,14 @@ class BillProvider extends ChangeNotifier {
 
   // --- People ---
 
-  void addPerson(String name) {
+  void addPerson(String name, {int? userId, String? avatarUrl}) {
     final colorIndex = _nextPersonId % Person.avatarColors.length;
     _people.add(Person(
       id: 'person_${_nextPersonId++}',
       name: name,
       avatarColor: Person.avatarColors[colorIndex],
+      userId: userId,
+      avatarUrl: avatarUrl,
     ));
     notifyListeners();
   }

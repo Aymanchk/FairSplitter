@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/bill_item.dart';
 import '../providers/bill_provider.dart';
 import '../theme/app_theme.dart';
@@ -696,13 +697,61 @@ class _SplitScreenState extends State<SplitScreen> {
   }
 
   Future<void> _scanReceipt(BuildContext context) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Сканировать чек',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: AppTheme.primary),
+                title: const Text('Камера',
+                    style: TextStyle(color: AppTheme.textPrimary)),
+                subtitle: const Text('Сфотографировать чек',
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: AppTheme.accent),
+                title: const Text('Галерея',
+                    style: TextStyle(color: AppTheme.textPrimary)),
+                subtitle: const Text('Выбрать фото чека',
+                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !context.mounted) return;
+
     try {
-      final items = await OcrHelper.scanReceipt();
+      final items = await OcrHelper.scanReceipt(source: source);
       if (items.isEmpty) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Не удалось распознать позиции'),
+              content: Text(
+                'Не удалось распознать позиции. Попробуйте сфотографировать чек ровнее при хорошем освещении.',
+              ),
+              duration: Duration(seconds: 4),
             ),
           );
         }

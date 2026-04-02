@@ -46,6 +46,8 @@ app.*.map.json
 
 # Python / Django
 backend_venv/
+backend/venv/
+backend/media/
 *.pyc
 __pycache__/
 db.sqlite3

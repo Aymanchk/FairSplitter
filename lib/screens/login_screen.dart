@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import 'register_screen.dart';
-import 'add_people_screen.dart';
+import 'home_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success && mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AddPeopleScreen()),
+        MaterialPageRoute(builder: (_) => const HomeShell()),
       );
     }
   }
@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _continueAsGuest() {
     context.read<AuthProvider>().continueAsGuest();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AddPeopleScreen()),
+      MaterialPageRoute(builder: (_) => const HomeShell()),
     );
   }
 

@@ -101,12 +101,3 @@ flutter run
 4. **View summary** — see the breakdown with service charge applied
 5. **Share** — send results to Telegram, WhatsApp, or any app
 
-## License
-
-This project is for educational purposes.
-
----
-
-<div align="center">
-  Made with care in Kyrgyzstan
-</div>

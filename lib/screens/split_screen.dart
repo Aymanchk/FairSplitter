@@ -113,7 +113,7 @@ class _SplitScreenState extends State<SplitScreen>
               ),
               _ScanOption(
                 icon: Icons.photo_library_rounded,
-                color: AppTheme.accent,
+                color: const Color(0xFFFF8F5E),
                 title: 'Галерея',
                 subtitle: 'Выбрать фото чека',
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
@@ -156,226 +156,225 @@ class _SplitScreenState extends State<SplitScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            right: -30,
-            child: _Blob(color: AppTheme.primary, size: 160),
-          ),
-          SafeArea(
-            child: Consumer<BillProvider>(
-              builder: (context, provider, _) {
-                final unassignedTotal = provider.unassignedItems
-                    .fold<double>(0, (s, i) => s + i.price);
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              right: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+            ),
+            SafeArea(
+              child: Consumer<BillProvider>(
+                builder: (context, provider, _) {
+                  final unassignedTotal = provider.unassignedItems
+                      .fold<double>(0, (s, i) => s + i.price);
 
-                return Column(
-                  children: [
-                    // ── AppBar ───────────────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: LiquidGlass(
-                              borderRadius: BorderRadius.circular(12),
-                              padding: const EdgeInsets.all(10),
-                              child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  size: 18,
-                                  color: AppTheme.textPrimary),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Разделить счёт',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: -0.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ── Floating total pill ──────────────────────────
-                    Center(
-                      child: LiquidGlass(
-                        borderRadius: BorderRadius.circular(50),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        child: Column(
+                  return Column(
+                    children: [
+                      // ── AppBar ───────────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: Row(
                           children: [
-                            Text(
-                              '${provider.total.toStringAsFixed(0)} сом',
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: -0.5,
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: LiquidGlass(
+                                borderRadius: BorderRadius.circular(12),
+                                padding: const EdgeInsets.all(10),
+                                child: const Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    size: 18,
+                                    color: AppTheme.textPrimary),
                               ),
                             ),
-                            if (provider.serviceChargeEnabled)
-                              Text(
-                                'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.textSecondary,
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Разделить счёт',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.textPrimary,
+                                  letterSpacing: -0.4,
                                 ),
                               ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── Service charge ─────────────────────
-                            _buildServiceCharge(provider),
-                            const SizedBox(height: 16),
-
-                            // ── Action buttons ─────────────────────
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _ActionButton(
-                                    icon: Icons.add_rounded,
-                                    label: 'Добавить',
-                                    color: AppTheme.primary,
-                                    onTap: _showAddItemDialog,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: _ActionButton(
-                                    icon: Icons.camera_alt_rounded,
-                                    label: 'Скан чека',
-                                    color: AppTheme.accent,
-                                    onTap: _scanReceipt,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-
-                            // ── Items list ─────────────────────────
-                            Row(
-                              children: [
+                      // ── Floating total pill ──────────────────────────
+                      Center(
+                        child: LiquidGlass(
+                          borderRadius: BorderRadius.circular(50),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                          child: Column(
+                            children: [
+                              Text(
+                                '${provider.total.toStringAsFixed(0)} сом',
+                                style: AppTheme.moneyStyle(fontSize: 22),
+                              ),
+                              if (provider.serviceChargeEnabled)
                                 Text(
-                                  'Блюда (${provider.items.length})',
+                                  'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания',
                                   style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                    color: AppTheme.textSecondary,
                                   ),
                                 ),
-                                const Spacer(),
-                                if (provider.unassignedItems.isNotEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accent
-                                          .withValues(alpha: 0.15),
-                                      borderRadius:
-                                          BorderRadius.circular(20),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // ── Service charge ─────────────────────
+                              _buildServiceCharge(provider),
+                              const SizedBox(height: 16),
+
+                              // ── Action buttons ─────────────────────
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _ActionButton(
+                                      icon: Icons.add_rounded,
+                                      label: 'Добавить',
+                                      color: AppTheme.primary,
+                                      onTap: _showAddItemDialog,
                                     ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _ActionButton(
+                                      icon: Icons.camera_alt_rounded,
+                                      label: 'Скан чека',
+                                      color: const Color(0xFFFF8F5E),
+                                      onTap: _scanReceipt,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // ── Items list ─────────────────────────
+                              Row(
+                                children: [
+                                  Text(
+                                    'Блюда (${provider.items.length})',
+                                    style: const TextStyle(
+                                      color: AppTheme.textPrimary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (provider.unassignedItems.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.accent
+                                            .withValues(alpha: 0.15),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        '${provider.unassignedItems.length} не распределено',
+                                        style: const TextStyle(
+                                          color: AppTheme.accent,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+
+                              if (provider.items.isEmpty)
+                                _EmptyItemsState()
+                              else
+                                ...provider.items.map((item) {
+                                  final assigned =
+                                      provider.getPeopleForItem(item.id);
+                                  return _ItemTile(
+                                    item: item,
+                                    assignedPeople: assigned,
+                                    provider: provider,
+                                  );
+                                }),
+
+                              const SizedBox(height: 20),
+
+                              // ── Drop targets ───────────────────────
+                              if (provider.people.isNotEmpty) ...[
+                                const Text(
+                                  'Перетащите блюда на участников',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                _PeopleDropRow(provider: provider),
+                              ],
+
+                              if (unassignedTotal > 0) ...[
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: LiquidGlass(
+                                    borderRadius: BorderRadius.circular(50),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
                                     child: Text(
-                                      '${provider.unassignedItems.length} не распределено',
+                                      'Осталось: ${unassignedTotal.toStringAsFixed(0)} сом',
                                       style: const TextStyle(
                                         color: AppTheme.accent,
-                                        fontSize: 11,
                                         fontWeight: FontWeight.w600,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ),
+                                ),
                               ],
-                            ),
-                            const SizedBox(height: 8),
 
-                            if (provider.items.isEmpty)
-                              _EmptyItemsState()
-                            else
-                              ...provider.items.map((item) {
-                                final assigned =
-                                    provider.getPeopleForItem(item.id);
-                                return _ItemTile(
-                                  item: item,
-                                  assignedPeople: assigned,
-                                  provider: provider,
-                                );
-                              }),
-
-                            const SizedBox(height: 20),
-
-                            // ── Drop targets ───────────────────────
-                            if (provider.people.isNotEmpty) ...[
-                              const Text(
-                                'Перетащите блюда на участников',
-                                style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _PeopleDropRow(provider: provider),
+                              const SizedBox(height: 24),
                             ],
-
-                            if (unassignedTotal > 0) ...[
-                              const SizedBox(height: 12),
-                              Center(
-                                child: LiquidGlass(
-                                  borderRadius: BorderRadius.circular(50),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 10),
-                                  child: Text(
-                                    'Осталось: ${unassignedTotal.toStringAsFixed(0)} сом',
-                                    style: const TextStyle(
-                                      color: AppTheme.accent,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-
-                            const SizedBox(height: 24),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    // ── Bottom button ────────────────────────────────
-                    _BottomBar(
-                      enabled: provider.items.isNotEmpty &&
-                          provider.unassignedItems.isEmpty,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const SummaryScreen()),
+                      // ── Bottom button ────────────────────────────────
+                      _BottomBar(
+                        enabled: provider.items.isNotEmpty &&
+                            provider.unassignedItems.isEmpty,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const SummaryScreen()),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -435,7 +434,7 @@ class _SplitScreenState extends State<SplitScreen>
                   '${pct.toStringAsFixed(0)}%',
                   style: TextStyle(
                     color: isActive
-                        ? Colors.white
+                        ? const Color(0xFF1A1A1A)
                         : AppTheme.textSecondary,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
@@ -487,7 +486,7 @@ class _ItemTile extends StatelessWidget {
           child: Text(
             '${item.name}  ${item.price.toStringAsFixed(0)} сом',
             style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w600),
+                color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -634,14 +633,14 @@ class _PeopleDropRow extends StatelessWidget {
                             : person.avatarColor.withValues(alpha: 0.75),
                         border: Border.all(
                           color: hovering
-                              ? Colors.white
+                              ? const Color(0xFFFFD166)
                               : person.avatarColor,
                           width: hovering ? 3 : 2,
                         ),
                         boxShadow: hovering
                             ? [
                                 BoxShadow(
-                                  color: person.avatarColor
+                                  color: const Color(0xFFF5A623)
                                       .withValues(alpha: 0.6),
                                   blurRadius: 20,
                                   spreadRadius: 3,
@@ -766,9 +765,12 @@ class _BottomBar extends StatelessWidget {
                       children: [
                         Text('Итоги',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1A1A))),
                         SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 20),
+                        Icon(Icons.arrow_forward_rounded,
+                            size: 20, color: Color(0xFF1A1A1A)),
                       ],
                     ),
                   ),
@@ -849,7 +851,7 @@ class _EmptyItemsState extends StatelessWidget {
           Text('🍽️', style: TextStyle(fontSize: 40)),
           SizedBox(height: 12),
           Text(
-            'Добавьте блюда из счёта\nили сканируйте чек',
+            'Пока тут пусто. Время ужинать?\nДобавьте блюда или сканируйте чек',
             textAlign: TextAlign.center,
             style:
                 TextStyle(color: AppTheme.textSecondary, fontSize: 14),

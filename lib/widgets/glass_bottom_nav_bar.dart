@@ -131,7 +131,7 @@ class _NavItem extends StatelessWidget {
                   tab.activeIcon,
                   key: ValueKey(isActive),
                   size: 24,
-                  color: isActive ? AppTheme.accent : AppTheme.textSecondary,
+                  color: isActive ? AppTheme.primary : AppTheme.textSecondary,
                 ),
               ),
               if (badge > 0)
@@ -164,7 +164,7 @@ class _NavItem extends StatelessWidget {
             child: Text(
               tab.label,
               style: const TextStyle(
-                color: AppTheme.accent,
+                color: AppTheme.primary,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.2,
@@ -172,7 +172,7 @@ class _NavItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          // Glowing orb indicator
+          // Glowing orb indicator — golden
           AnimatedBuilder(
             animation: orbController,
             builder: (context, _) {

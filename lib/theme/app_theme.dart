@@ -1,65 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Core colors — exact spec values
-  static const Color background = Color(0xFF0D0B1E);    // deep space dark
-  static const Color surface = Color(0xFF1A1730);        // elevated plum-dark
-  static const Color surfaceLight = Color(0xFF231F3E);
-  static const Color primary = Color(0xFF7C3AED);        // electric violet
-  static const Color primaryLight = Color(0xFF9F67FF);
-  static const Color accent = Color(0xFFA78BFA);         // soft lavender
-  static const Color success = Color(0xFF34D399);        // mint green
-  static const Color danger = Color(0xFFF87171);         // soft red
-  static const Color textPrimary = Color(0xFFF1F0F5);   // warm white
-  static const Color textSecondary = Color(0xFF8B85A1);  // muted lavender-grey
+  // ── Core palette — Premium Dark with warm accents ──────────────────────────
+  static const Color background = Color(0xFF0F1B2D);       // deep dark blue
+  static const Color backgroundLight = Color(0xFF1A2744);   // gradient end
+  static const Color surface = Color(0xFF1E2E4A);           // card / elevated
+  static const Color surfaceLight = Color(0xFF263754);       // lighter surface
+  static const Color primary = Color(0xFFF5A623);            // warm amber/gold
+  static const Color primaryLight = Color(0xFFFFD166);       // light gold
+  static const Color accent = Color(0xFFF5A623);             // amber (same as primary for consistency)
+  static const Color success = Color(0xFF4ECDC4);            // mint green
+  static const Color danger = Color(0xFFFF6B6B);             // soft coral
+  static const Color textPrimary = Color(0xE6FFFFFF);        // white @ 90%
+  static const Color textSecondary = Color(0xFF8899AA);      // muted blue-grey
 
-  // Legacy aliases (kept for backwards compat)
+  // Legacy aliases
   static const Color green = success;
   static const Color error = danger;
-  static const Color border = Color(0x0FFFFFFF);         // white @ 6%
-  static const Color inputFill = Color(0xFF1A1730);
+  static const Color border = Color(0x0FFFFFFF);
+  static const Color inputFill = Color(0xFF1E2E4A);
 
   // Glass material constants
-  static const Color glassFill = Color(0x0FFFFFFF);      // rgba(255,255,255,0.06)
-  static const Color glassBorder = Color(0x1EFFFFFF);    // rgba(255,255,255,0.12)
-  static const Color glassBorderTop = Color(0x2DFFFFFF); // rgba(255,255,255,0.18)
-  static const Color glassNavFill = Color(0xBF1A1730);   // surface @ 75%
+  static const Color glassFill = Color(0x0FFFFFFF);
+  static const Color glassBorder = Color(0x1EFFFFFF);
+  static const Color glassBorderTop = Color(0x2DFFFFFF);
+  static const Color glassNavFill = Color(0xBF1A2744);
 
-  // Gradient helpers
+  // ── Gradients ─────────────────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF7C3AED), Color(0xFF9F67FF)],
+    colors: [Color(0xFFF5A623), Color(0xFFFFD166)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const SweepGradient profileRingGradient = SweepGradient(
-    colors: [primary, accent, Color(0xFF3B82F6), primary],
+  static const LinearGradient backgroundGradient = LinearGradient(
+    colors: [Color(0xFF0F1B2D), Color(0xFF1A2744)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
   );
 
+  static const SweepGradient profileRingGradient = SweepGradient(
+    colors: [primary, primaryLight, Color(0xFFFF8F5E), primary],
+  );
+
+  // ── Typography helpers ────────────────────────────────────────────────────
+  static TextStyle headingStyle({double fontSize = 28}) =>
+      GoogleFonts.nunito(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w900,
+        color: textPrimary,
+        letterSpacing: -0.5,
+      );
+
+  static TextStyle moneyStyle({double fontSize = 22}) =>
+      GoogleFonts.jetBrainsMono(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w700,
+        color: primary,
+      );
+
+  static TextStyle bodyStyle({double fontSize = 14}) =>
+      GoogleFonts.nunito(
+        fontSize: fontSize,
+        fontWeight: FontWeight.normal,
+        color: textPrimary,
+      );
+
+  // ── Theme Data ────────────────────────────────────────────────────────────
   static ThemeData get darkTheme {
+    final base = GoogleFonts.nunitoTextTheme(ThemeData.dark().textTheme);
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: background,
+      textTheme: base.apply(
+        bodyColor: textPrimary,
+        displayColor: textPrimary,
+      ),
       colorScheme: const ColorScheme.dark(
         primary: primary,
-        secondary: accent,
+        secondary: primaryLight,
         surface: surface,
         error: danger,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onPrimary: Color(0xFF1A1A1A),
+        onSecondary: Color(0xFF1A1A1A),
         onSurface: textPrimary,
         onError: Colors.white,
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: background,
         foregroundColor: textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.nunito(
           color: textPrimary,
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
         ),
       ),
@@ -67,7 +105,7 @@ class AppTheme {
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(
             color: Colors.white.withValues(alpha: 0.06),
             width: 1,
@@ -106,14 +144,14 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A1A1A),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.nunito(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             letterSpacing: -0.2,
           ),
         ),
@@ -129,7 +167,7 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: accent),
+        style: TextButton.styleFrom(foregroundColor: primaryLight),
       ),
       dividerTheme: DividerThemeData(
         color: Colors.white.withValues(alpha: 0.06),
@@ -148,10 +186,10 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
-        titleTextStyle: const TextStyle(
+        titleTextStyle: GoogleFonts.nunito(
           color: textPrimary,
           fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(

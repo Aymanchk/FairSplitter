@@ -113,7 +113,8 @@ class ApiService {
       headers: _headers,
     );
     final body = _handleResponse(response);
-    return List<Map<String, dynamic>>.from(body['results']);
+    final results = body.containsKey('results') ? body['results'] : [];
+    return List<Map<String, dynamic>>.from(results);
   }
 
   // --- Bills ---
@@ -152,7 +153,7 @@ class ApiService {
       Uri.parse('$_baseUrl/bills/$id/'),
       headers: _headers,
     );
-    return response.statusCode == 200;
+    return response.statusCode == 200 || response.statusCode == 204;
   }
 
   // --- Chat ---

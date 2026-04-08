@@ -60,87 +60,89 @@ class _StatsScreenState extends State<StatsScreen>
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            right: -30,
-            child: _Blob(color: AppTheme.primary, size: 180),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ── Header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 18, color: AppTheme.textPrimary),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              right: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+            ),
+            Positioned(
+              bottom: 120,
+              left: -40,
+              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── Header ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                size: 18, color: AppTheme.textPrimary),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Статистика',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                          letterSpacing: -0.4,
+                        const SizedBox(width: 12),
+                        Text(
+                          'Статистика',
+                          style: AppTheme.headingStyle(fontSize: 20),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: auth.isGuest
-                      ? _GuestPlaceholder()
-                      : _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primary))
-                          : _stats == null
-                              ? const Center(
-                                  child: Text('Нет данных',
-                                      style: TextStyle(
-                                          color: AppTheme.textSecondary)))
-                              : RefreshIndicator(
-                                  onRefresh: _loadStats,
-                                  color: AppTheme.primary,
-                                  child: SingleChildScrollView(
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        _buildSummaryCards(),
-                                        const SizedBox(height: 20),
-                                        _buildWeeklyChart(),
-                                        const SizedBox(height: 16),
-                                        _buildMonthlyChart(),
-                                        const SizedBox(height: 16),
-                                        _buildTopPeople(),
-                                        const SizedBox(height: 100),
-                                      ],
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: auth.isGuest
+                        ? _GuestPlaceholder()
+                        : _isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppTheme.primary))
+                            : _stats == null
+                                ? const Center(
+                                    child: Text('Нет данных',
+                                        style: TextStyle(
+                                            color: AppTheme.textSecondary)))
+                                : RefreshIndicator(
+                                    onRefresh: _loadStats,
+                                    color: AppTheme.primary,
+                                    child: SingleChildScrollView(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          _buildSummaryCards(),
+                                          const SizedBox(height: 20),
+                                          _buildWeeklyChart(),
+                                          const SizedBox(height: 16),
+                                          _buildMonthlyChart(),
+                                          const SizedBox(height: 16),
+                                          _buildTopPeople(),
+                                          const SizedBox(height: 100),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -267,7 +269,7 @@ class _StatsScreenState extends State<StatsScreen>
                       BarChartRodData(
                         toY: total,
                         gradient: const LinearGradient(
-                          colors: [AppTheme.primary, AppTheme.accent],
+                          colors: [AppTheme.primary, AppTheme.primaryLight],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
@@ -380,14 +382,14 @@ class _StatsScreenState extends State<StatsScreen>
                     ),
                     isCurved: true,
                     gradient: const LinearGradient(
-                        colors: [AppTheme.accent, AppTheme.primary]),
+                        colors: [AppTheme.primaryLight, AppTheme.primary]),
                     barWidth: 3,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (_, __, ___, ____) =>
                           FlDotCirclePainter(
                         radius: 4,
-                        color: AppTheme.accent,
+                        color: AppTheme.primaryLight,
                         strokeWidth: 2,
                         strokeColor: AppTheme.background,
                       ),
@@ -396,7 +398,7 @@ class _StatsScreenState extends State<StatsScreen>
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          AppTheme.accent.withValues(alpha: 0.2),
+                          AppTheme.primaryLight.withValues(alpha: 0.2),
                           Colors.transparent,
                         ],
                         begin: Alignment.topCenter,
@@ -439,10 +441,10 @@ class _StatsScreenState extends State<StatsScreen>
             final progress = count / maxCount;
             const colors = [
               AppTheme.primary,
-              AppTheme.accent,
+              Color(0xFFFF8F5E),
               AppTheme.success,
-              Color(0xFFFF8F00),
-              Color(0xFFE53935),
+              Color(0xFFFF6B6B),
+              Color(0xFF7C5CFC),
             ];
             final color = colors[i % colors.length];
 
@@ -465,7 +467,7 @@ class _StatsScreenState extends State<StatsScreen>
                         const Positioned(
                           top: -4,
                           right: -4,
-                          child: Text('👑',
+                          child: Text('\u{1F451}',
                               style: TextStyle(fontSize: 12)),
                         ),
                     ],
@@ -540,10 +542,7 @@ class _GlassSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(value,
-              style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
+              style: AppTheme.moneyStyle(fontSize: 20)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(
@@ -561,7 +560,7 @@ class _GuestPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('📊', style: TextStyle(fontSize: 52)),
+          Text('\u{1F4CA}', style: TextStyle(fontSize: 52)),
           SizedBox(height: 14),
           Text('Войдите для просмотра',
               style: TextStyle(

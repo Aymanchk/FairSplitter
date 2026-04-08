@@ -25,98 +25,102 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final provider = context.watch<NotificationProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            right: -30,
-            child: _Blob(color: AppTheme.accent, size: 160),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ── Header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 18, color: AppTheme.textPrimary),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Уведомления',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                      ),
-                      if (provider.unreadCount > 0)
-                        GestureDetector(
-                          onTap: () => provider.markAllRead(),
-                          child: LiquidGlass(
-                            borderRadius: BorderRadius.circular(50),
-                            interactive: true,
-                            onTap: () => provider.markAllRead(),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 7),
-                            child: const Text(
-                              'Прочитать все',
-                              style: TextStyle(
-                                color: AppTheme.accent,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: provider.isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: AppTheme.primary))
-                      : provider.notifications.isEmpty
-                          ? _EmptyState()
-                          : RefreshIndicator(
-                              onRefresh: () => provider.loadNotifications(),
-                              color: AppTheme.primary,
-                              child: ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
-                                itemCount: provider.notifications.length,
-                                itemBuilder: (_, i) {
-                                  final n = provider.notifications[i];
-                                  return _NotifCard(
-                                    notification: n,
-                                    onTap: () {
-                                      final id = n['id'] as int?;
-                                      if (id != null) provider.markRead(id);
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                ),
-              ],
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              right: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 160),
             ),
-          ),
-        ],
+            Positioned(
+              bottom: 100,
+              left: -30,
+              child: _Blob(color: const Color(0xFFFFD166), size: 110),
+            ),
+            Positioned(
+              top: 80,
+              left: -20,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 80),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── Header ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                size: 18, color: AppTheme.textPrimary),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Уведомления',
+                            style: AppTheme.headingStyle(fontSize: 20),
+                          ),
+                        ),
+                        if (provider.unreadCount > 0)
+                          LiquidGlass(
+                              borderRadius: BorderRadius.circular(50),
+                              interactive: true,
+                              onTap: () => provider.markAllRead(),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 7),
+                              child: const Text(
+                                'Прочитать все',
+                                style: TextStyle(
+                                  color: AppTheme.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: provider.isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                                color: AppTheme.primary))
+                        : provider.notifications.isEmpty
+                            ? _EmptyState()
+                            : RefreshIndicator(
+                                onRefresh: () => provider.loadNotifications(),
+                                color: AppTheme.primary,
+                                child: ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  itemCount: provider.notifications.length,
+                                  itemBuilder: (_, i) {
+                                    final n = provider.notifications[i];
+                                    return _NotifCard(
+                                      notification: n,
+                                      onTap: () {
+                                        final id = n['id'] as int?;
+                                        if (id != null) provider.markRead(id);
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -149,7 +153,7 @@ class _NotifCard extends StatelessWidget {
         iconColor = AppTheme.danger;
       case 'new_message':
         icon = Icons.chat_bubble_rounded;
-        iconColor = AppTheme.accent;
+        iconColor = const Color(0xFFFFD166);
       default:
         icon = Icons.notifications_rounded;
         iconColor = AppTheme.textSecondary;
@@ -264,7 +268,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('🔔', style: TextStyle(fontSize: 52)),
+          Text('\u{1F514}', style: TextStyle(fontSize: 52)),
           SizedBox(height: 14),
           Text('Нет уведомлений',
               style: TextStyle(

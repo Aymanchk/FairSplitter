@@ -81,174 +81,183 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -50,
-            right: -30,
-            child: _Blob(color: AppTheme.accent, size: 160),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ── App bar ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          chat.loadRooms();
-                          Navigator.of(context).pop();
-                        },
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 18, color: AppTheme.textPrimary),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppTheme.primary,
-                        backgroundImage: widget.otherAvatarUrl != null
-                            ? CachedNetworkImageProvider(
-                                widget.otherAvatarUrl!)
-                            : null,
-                        child: widget.otherAvatarUrl == null
-                            ? Text(widget.otherUserName[0].toUpperCase(),
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold))
-                            : null,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        widget.otherUserName,
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // ── Messages ───────────────────────────────────────
-                Expanded(
-                  child: messages.isEmpty
-                      ? const Center(
-                          child: Text('Напишите первое сообщение',
-                              style: TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 14)),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          itemCount: messages.length,
-                          itemBuilder: (_, i) {
-                            final msg = messages[i];
-                            final sender = msg['sender'];
-                            final senderId = sender is Map
-                                ? sender['id'] as int?
-                                : null;
-                            final isMe = senderId == auth.userId;
-                            return _Bubble(
-                              text: msg['text'] as String? ?? '',
-                              isMe: isMe,
-                              time: _fmt(msg['created_at'] as String?),
-                            );
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -50,
+              right: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+            ),
+            Positioned(
+              bottom: 60,
+              left: -40,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 120),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── App bar ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            chat.loadRooms();
+                            Navigator.of(context).pop();
                           },
-                        ),
-                ),
-
-                // ── Glass input bar ────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                  child: SafeArea(
-                    top: false,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.07),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
-                            ),
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                size: 18, color: AppTheme.textPrimary),
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _messageController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Сообщение...',
-                                    filled: true,
-                                    fillColor: Colors.transparent,
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 10),
-                                    hintStyle: TextStyle(
-                                        color: AppTheme.textSecondary
-                                            .withValues(alpha: 0.6)),
-                                  ),
+                        ),
+                        const SizedBox(width: 12),
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppTheme.primary,
+                          backgroundImage: widget.otherAvatarUrl != null
+                              ? CachedNetworkImageProvider(
+                                  widget.otherAvatarUrl!)
+                              : null,
+                          child: widget.otherAvatarUrl == null
+                              ? Text(widget.otherUserName[0].toUpperCase(),
                                   style: const TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontSize: 15),
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  onSubmitted: (_) => _send(),
-                                ),
+                                      color: Color(0xFF1A1A1A),
+                                      fontWeight: FontWeight.bold))
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.otherUserName,
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // ── Messages ───────────────────────────────────────
+                  Expanded(
+                    child: messages.isEmpty
+                        ? const Center(
+                            child: Text('Напишите первое сообщение',
+                                style: TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 14)),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            itemCount: messages.length,
+                            itemBuilder: (_, i) {
+                              final msg = messages[i];
+                              final sender = msg['sender'];
+                              final senderId = sender is Map
+                                  ? sender['id'] as int?
+                                  : null;
+                              final isMe = senderId == auth.userId;
+                              return _Bubble(
+                                text: msg['text'] as String? ?? '',
+                                isMe: isMe,
+                                time: _fmt(msg['created_at'] as String?),
+                              );
+                            },
+                          ),
+                  ),
+
+                  // ── Glass input bar ────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                    child: SafeArea(
+                      top: false,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.07),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12),
                               ),
-                              GestureDetector(
-                                onTap: _send,
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    gradient: AppTheme.primaryGradient,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppTheme.primary
-                                            .withValues(alpha: 0.4),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _messageController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Сообщение...',
+                                      filled: true,
+                                      fillColor: Colors.transparent,
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 10),
+                                      hintStyle: TextStyle(
+                                          color: AppTheme.textSecondary
+                                              .withValues(alpha: 0.6)),
+                                    ),
+                                    style: const TextStyle(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 15),
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    onSubmitted: (_) => _send(),
                                   ),
-                                  child: const Icon(Icons.send_rounded,
-                                      color: Colors.white, size: 18),
                                 ),
-                              ),
-                            ],
+                                GestureDetector(
+                                  onTap: _send,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      gradient: AppTheme.primaryGradient,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.primary
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(Icons.send_rounded,
+                                        color: Color(0xFF1A1A1A), size: 18),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 8),
-              ],
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -302,7 +311,7 @@ class _Bubble extends StatelessWidget {
               text,
               style: TextStyle(
                 color:
-                    isMe ? Colors.white : AppTheme.textPrimary,
+                    isMe ? const Color(0xFF1A1A1A) : AppTheme.textPrimary,
                 fontSize: 15,
               ),
             ),
@@ -311,7 +320,7 @@ class _Bubble extends StatelessWidget {
               time,
               style: TextStyle(
                 color: isMe
-                    ? Colors.white.withValues(alpha: 0.6)
+                    ? const Color(0xFF1A1A1A).withValues(alpha: 0.6)
                     : AppTheme.textSecondary,
                 fontSize: 11,
               ),

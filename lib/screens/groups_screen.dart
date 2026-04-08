@@ -31,90 +31,92 @@ class _GroupsScreenState extends State<GroupsScreen> {
     final groupProvider = context.watch<GroupProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            right: -30,
-            child: _Blob(color: AppTheme.accent, size: 160),
-          ),
-          Positioned(
-            bottom: 80,
-            left: -40,
-            child: _Blob(color: AppTheme.primary, size: 120),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ── Header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 16, 0),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Группы',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.5,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              right: -30,
+              child: _Blob(color: const Color(0xFFFFD166), size: 160),
+            ),
+            Positioned(
+              bottom: 80,
+              left: -40,
+              child: _Blob(color: const Color(0xFFF5A623), size: 120),
+            ),
+            Positioned(
+              top: 100,
+              left: -20,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 90),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── Header ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 16, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Группы',
+                            style: AppTheme.headingStyle(fontSize: 28),
                           ),
                         ),
-                      ),
-                      if (!auth.isGuest)
-                        LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          interactive: true,
-                          onTap: () => _showCreateGroupSheet(context),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.add_rounded,
-                              size: 20, color: AppTheme.accent),
-                        ),
-                    ],
+                        if (!auth.isGuest)
+                          LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            interactive: true,
+                            onTap: () => _showCreateGroupSheet(context),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.add_rounded,
+                                size: 20, color: AppTheme.primary),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-                Expanded(
-                  child: auth.isGuest
-                      ? _GuestPlaceholder()
-                      : groupProvider.isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primary))
-                          : groupProvider.groups.isEmpty
-                              ? _EmptyPlaceholder(
-                                  onCreateTap: () =>
-                                      _showCreateGroupSheet(context))
-                              : RefreshIndicator(
-                                  onRefresh: () => groupProvider.loadGroups(),
-                                  color: AppTheme.primary,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    itemCount: groupProvider.groups.length,
-                                    itemBuilder: (context, index) {
-                                      final group =
-                                          groupProvider.groups[index];
-                                      return _GroupCard(
-                                        group: group,
-                                        onEdit: () =>
-                                            _showEditGroupSheet(context, group),
-                                        onDelete: () async {
-                                          final id = group['id'] as int;
-                                          await groupProvider.deleteGroup(id);
-                                        },
-                                      );
-                                    },
+                  Expanded(
+                    child: auth.isGuest
+                        ? _GuestPlaceholder()
+                        : groupProvider.isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppTheme.primary))
+                            : groupProvider.groups.isEmpty
+                                ? _EmptyPlaceholder(
+                                    onCreateTap: () =>
+                                        _showCreateGroupSheet(context))
+                                : RefreshIndicator(
+                                    onRefresh: () => groupProvider.loadGroups(),
+                                    color: AppTheme.primary,
+                                    child: ListView.builder(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      itemCount: groupProvider.groups.length,
+                                      itemBuilder: (context, index) {
+                                        final group =
+                                            groupProvider.groups[index];
+                                        return _GroupCard(
+                                          group: group,
+                                          onEdit: () =>
+                                              _showEditGroupSheet(context, group),
+                                          onDelete: () async {
+                                            final id = group['id'] as int;
+                                            await groupProvider.deleteGroup(id);
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -303,7 +305,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       child: Text(
                         'Создать группу',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF1A1A1A),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -504,7 +506,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       child: Text(
                         'Сохранить',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF1A1A1A),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -557,11 +559,11 @@ class _GroupCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.accent.withValues(alpha: 0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.group_rounded,
-                      color: AppTheme.accent, size: 22),
+                      color: AppTheme.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -747,7 +749,7 @@ class _EmptyPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('👥', style: TextStyle(fontSize: 52)),
+          const Text('\u{1F465}', style: TextStyle(fontSize: 52)),
           const SizedBox(height: 14),
           const Text('Нет групп',
               style: TextStyle(
@@ -779,11 +781,11 @@ class _EmptyPlaceholder extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add_rounded, color: Colors.white, size: 18),
+                  Icon(Icons.add_rounded, color: Color(0xFF1A1A1A), size: 18),
                   SizedBox(width: 6),
                   Text('Создать группу',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF1A1A1A),
                           fontSize: 14,
                           fontWeight: FontWeight.w600)),
                 ],
@@ -803,7 +805,7 @@ class _GuestPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('👥', style: TextStyle(fontSize: 52)),
+          Text('\u{1F465}', style: TextStyle(fontSize: 52)),
           SizedBox(height: 14),
           Text('Войдите в аккаунт',
               style: TextStyle(

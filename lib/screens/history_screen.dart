@@ -73,97 +73,106 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -50,
-            right: -40,
-            child: _Blob(color: AppTheme.accent, size: 180),
-          ),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header ──────────────────────────────────────────
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                  child: Text(
-                    'История',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: -0.5,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -50,
+              right: -40,
+              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+            ),
+            Positioned(
+              bottom: 120,
+              left: -30,
+              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+            ),
+            Positioned(
+              top: 200,
+              left: -50,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Header ──────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Text(
+                      'История',
+                      style: AppTheme.headingStyle(fontSize: 28),
                     ),
                   ),
-                ),
 
-                // ── Filter chips ─────────────────────────────────────
-                if (!auth.isGuest) ...[
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    height: 38,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: [
-                        _FilterChip(
-                          label: 'Все',
-                          active: _filter == 'all',
-                          onTap: () => setState(() => _filter = 'all'),
-                        ),
-                        const SizedBox(width: 8),
-                        _FilterChip(
-                          label: 'Этот месяц',
-                          active: _filter == 'month',
-                          onTap: () => setState(() => _filter = 'month'),
-                        ),
-                      ],
+                  // ── Filter chips ─────────────────────────────────────
+                  if (!auth.isGuest) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 38,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        children: [
+                          _FilterChip(
+                            label: 'Все',
+                            active: _filter == 'all',
+                            onTap: () => setState(() => _filter = 'all'),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
+                            label: 'Этот месяц',
+                            active: _filter == 'month',
+                            onTap: () => setState(() => _filter = 'month'),
+                          ),
+                        ],
+                      ),
                     ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: auth.isGuest
+                        ? _GuestPlaceholder()
+                        : _isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppTheme.primary),
+                              )
+                            : _filtered.isEmpty
+                                ? _EmptyState()
+                                : RefreshIndicator(
+                                    onRefresh: _loadBills,
+                                    color: AppTheme.primary,
+                                    child: ListView.builder(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      itemCount: _filtered.length,
+                                      itemBuilder: (_, i) {
+                                        final bill = _filtered[i];
+                                        final originalIndex =
+                                            _bills.indexOf(bill);
+                                        return _BillCard(
+                                          bill: bill,
+                                          onTap: () =>
+                                              _showBillDetail(bill),
+                                          onDelete: () => _deleteBill(
+                                            bill['id'].toString(),
+                                            originalIndex,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                   ),
                 ],
-
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: auth.isGuest
-                      ? _GuestPlaceholder()
-                      : _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primary),
-                            )
-                          : _filtered.isEmpty
-                              ? _EmptyState()
-                              : RefreshIndicator(
-                                  onRefresh: _loadBills,
-                                  color: AppTheme.primary,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    itemCount: _filtered.length,
-                                    itemBuilder: (_, i) {
-                                      final bill = _filtered[i];
-                                      final originalIndex =
-                                          _bills.indexOf(bill);
-                                      return _BillCard(
-                                        bill: bill,
-                                        onTap: () =>
-                                            _showBillDetail(bill),
-                                        onDelete: () => _deleteBill(
-                                          bill['id'].toString(),
-                                          originalIndex,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -206,11 +215,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 bill['title']?.toString().isNotEmpty == true
                     ? bill['title']
                     : 'Счёт #${bill['id']}',
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTheme.headingStyle(fontSize: 22),
               ),
               const SizedBox(height: 4),
               Text(
@@ -232,11 +237,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             color: AppTheme.textSecondary, fontSize: 15)),
                     Text(
                       '${total.toStringAsFixed(0)} сом',
-                      style: const TextStyle(
-                        color: AppTheme.success,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTheme.moneyStyle(fontSize: 22),
                     ),
                   ],
                 ),
@@ -321,8 +322,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 fontWeight: FontWeight.w600)),
                         Text(
                           '${personTotal.toStringAsFixed(0)} сом',
-                          style: const TextStyle(
-                              color: AppTheme.accent, fontSize: 12),
+                          style: AppTheme.moneyStyle(fontSize: 12),
                         ),
                       ],
                     ),
@@ -375,7 +375,7 @@ class _FilterChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.white : AppTheme.textSecondary,
+            color: active ? const Color(0xFF1A1A1A) : AppTheme.textSecondary,
             fontSize: 13,
             fontWeight: active ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -424,7 +424,12 @@ class _BillCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          border: Border(
+            left: BorderSide(
+              color: AppTheme.primary,
+              width: 3,
+            ),
+          ),
           boxShadow: [
             BoxShadow(
               color: AppTheme.primary.withValues(alpha: 0.06),
@@ -473,11 +478,7 @@ class _BillCard extends StatelessWidget {
                   ),
                   Text(
                     '${total.toStringAsFixed(0)} сом',
-                    style: const TextStyle(
-                      color: AppTheme.success,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTheme.moneyStyle(fontSize: 16),
                   ),
                 ],
               ),
@@ -542,16 +543,13 @@ class _EmptyState extends StatelessWidget {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          Text('😴', style: TextStyle(fontSize: 52)),
-          SizedBox(height: 14),
+        children: [
+          const Text('\u{1F37D}\u{FE0F}', style: TextStyle(fontSize: 52)),
+          const SizedBox(height: 14),
           Text('Счетов пока нет',
-              style: TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold)),
-          SizedBox(height: 6),
-          Text('Разделите первый счёт,\nи он появится здесь',
+              style: AppTheme.headingStyle(fontSize: 17)),
+          const SizedBox(height: 6),
+          const Text('Разделите первый счёт,\nи он появится здесь',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         ],
@@ -568,18 +566,15 @@ class _GuestPlaceholder extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Text('🔒', style: TextStyle(fontSize: 48)),
-            SizedBox(height: 14),
+          children: [
+            const Text('\u{1F512}', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 14),
             Text(
               'Войдите в аккаунт',
-              style: TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold),
+              style: AppTheme.headingStyle(fontSize: 17),
             ),
-            SizedBox(height: 6),
-            Text(
+            const SizedBox(height: 6),
+            const Text(
               'История счетов сохраняется\nтолько для зарегистрированных',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),

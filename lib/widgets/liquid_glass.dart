@@ -1,21 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Reusable Liquid Glass material — iOS 26 style.
-/// Place colorful gradient blobs behind this widget for full effect.
+/// Reusable Liquid Glass material — glassmorphism style.
 class LiquidGlass extends StatefulWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final BorderRadius? borderRadius;
-
-  /// Enable press scale + brightness animation.
   final bool interactive;
   final VoidCallback? onTap;
-
-  /// Backdrop blur sigma (default 30).
   final double blurSigma;
-
-  /// Override the default fill colour.
   final Color? fillColor;
 
   const LiquidGlass({
@@ -107,7 +100,7 @@ class _LiquidGlassState extends State<LiquidGlass> {
   }
 }
 
-/// A pill-shaped glass chip — used for quick-action bars, filter chips etc.
+/// A pill-shaped glass chip.
 class GlassPill extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -129,7 +122,7 @@ class GlassPill extends StatelessWidget {
       interactive: onTap != null,
       onTap: onTap,
       fillColor: isActive
-          ? const Color(0xFF7C3AED).withValues(alpha: 0.25)
+          ? const Color(0xFFF5A623).withValues(alpha: 0.25)
           : null,
       padding: padding,
       child: child,
@@ -137,8 +130,7 @@ class GlassPill extends StatelessWidget {
   }
 }
 
-/// Ambient blobs that make the glass effect look vivid.
-/// Wrap glass panels inside a [GlassAmbientBackground] for best results.
+/// Ambient blobs — warm tones for the "appetizing" aesthetic.
 class GlassAmbientBackground extends StatelessWidget {
   final Widget child;
 
@@ -148,23 +140,23 @@ class GlassAmbientBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Violet blob — top-left
+        // Amber blob — top-left
         Positioned(
           top: -60,
           left: -40,
-          child: _Blob(color: const Color(0xFF7C3AED), size: 220),
+          child: _Blob(color: const Color(0xFFF5A623), size: 220),
         ),
-        // Lavender blob — top-right
+        // Peach blob — top-right
         Positioned(
           top: 40,
           right: -60,
-          child: _Blob(color: const Color(0xFFA78BFA), size: 180),
+          child: _Blob(color: const Color(0xFFFFD166), size: 180),
         ),
-        // Blue blob — bottom-center
+        // Coral blob — bottom-center
         Positioned(
           bottom: -40,
           left: 60,
-          child: _Blob(color: const Color(0xFF3B82F6), size: 160),
+          child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
         ),
         child,
       ],

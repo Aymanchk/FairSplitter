@@ -157,7 +157,7 @@ class BillProvider extends ChangeNotifier {
   void reset({bool keepPeople = false}) {
     _items.clear();
     _assignments.clear();
-    _serviceChargePercent = 15.0;
+    _serviceChargePercent = 10.0;
     _serviceChargeEnabled = true;
     _nextItemId = 0;
     if (!keepPeople) {

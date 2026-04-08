@@ -30,74 +30,78 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final chat = context.watch<ChatProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            right: -30,
-            child: _Blob(color: AppTheme.accent, size: 160),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ── Header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 16, 0),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Чаты',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.5,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              right: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+            ),
+            Positioned(
+              bottom: 100,
+              left: -40,
+              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── Header ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 16, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Чаты',
+                            style: AppTheme.headingStyle(),
                           ),
                         ),
-                      ),
-                      if (!auth.isGuest)
-                        LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          interactive: true,
-                          onTap: () => _showNewChatSheet(context),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.edit_rounded,
-                              size: 20, color: AppTheme.accent),
-                        ),
-                    ],
+                        if (!auth.isGuest)
+                          LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            interactive: true,
+                            onTap: () => _showNewChatSheet(context),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.edit_rounded,
+                                size: 20, color: AppTheme.primary),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-                Expanded(
-                  child: auth.isGuest
-                      ? _GuestPlaceholder()
-                      : chat.isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primary))
-                          : chat.rooms.isEmpty
-                              ? _EmptyPlaceholder()
-                              : RefreshIndicator(
-                                  color: AppTheme.primary,
-                                  onRefresh: () => chat.loadRooms(),
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    itemCount: chat.rooms.length,
-                                    itemBuilder: (_, i) => _RoomTile(
-                                      room: chat.rooms[i],
-                                      currentUserId: auth.userId,
+                  Expanded(
+                    child: auth.isGuest
+                        ? _GuestPlaceholder()
+                        : chat.isLoading
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: AppTheme.primary))
+                            : chat.rooms.isEmpty
+                                ? _EmptyPlaceholder()
+                                : RefreshIndicator(
+                                    color: AppTheme.primary,
+                                    onRefresh: () => chat.loadRooms(),
+                                    child: ListView.builder(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      itemCount: chat.rooms.length,
+                                      itemBuilder: (_, i) => _RoomTile(
+                                        room: chat.rooms[i],
+                                        currentUserId: auth.userId,
+                                      ),
                                     ),
                                   ),
-                                ),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -288,7 +292,7 @@ class _RoomTile extends StatelessWidget {
                   ),
                   child: Text('$unread',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF1A1A1A),
                           fontSize: 11,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -317,7 +321,7 @@ class _Avatar extends StatelessWidget {
       child: avatarUrl == null
           ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
               style: TextStyle(
-                  color: Colors.white,
+                  color: const Color(0xFF1A1A1A),
                   fontWeight: FontWeight.bold,
                   fontSize: radius * 0.75))
           : null,

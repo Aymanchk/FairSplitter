@@ -63,266 +63,217 @@ class _HomeScreenState extends State<HomeScreen> {
     final userName = auth.userName?.split(' ').first ?? 'там';
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          // Ambient blobs
-          Positioned(
-            top: -60,
-            right: -40,
-            child: _Blob(color: AppTheme.primary, size: 200),
-          ),
-          Positioned(
-            top: 140,
-            left: -50,
-            child: _Blob(color: AppTheme.accent, size: 160),
-          ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            // Warm ambient blobs
+            Positioned(
+              top: -60,
+              right: -40,
+              child: _Blob(color: const Color(0xFFF5A623), size: 200),
+            ),
+            Positioned(
+              top: 200,
+              left: -50,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
+            ),
 
-          SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _loadData,
-              color: AppTheme.primary,
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // ── Header ───────────────────────────────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '$greeting, $userName 👋',
-                                      style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
-                                        letterSpacing: -0.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateFormat('d MMMM, EEEE', 'ru')
-                                          .format(now),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // ── Quick Actions ─────────────────────────────────────
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 52,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 20),
-                        children: [
-                          _QuickActionPill(
-                            icon: Icons.add_rounded,
-                            label: 'Новый счёт',
-                            onTap: _openNewBill,
-                          ),
-                          const SizedBox(width: 10),
-                          _QuickActionPill(
-                            icon: Icons.camera_alt_rounded,
-                            label: 'Скан чека',
-                            onTap: _openNewBill,
-                          ),
-                          const SizedBox(width: 10),
-                          _QuickActionPill(
-                            icon: Icons.group_add_rounded,
-                            label: 'Создать группу',
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                  // ── Balance summary ────────────────────────────────────
-                  if (!auth.isGuest &&
-                      debtProvider.balances.isNotEmpty) ...[
+            SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _loadData,
+                color: AppTheme.primary,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    // Header
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Баланс',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$greeting, $userName 👋',
+                                        style: AppTheme.headingStyle(fontSize: 26),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateFormat('d MMMM, EEEE', 'ru').format(now),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 20),
                           ],
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: 90,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20),
-                          itemCount:
-                              debtProvider.balances.length.clamp(0, 4),
-                          itemBuilder: (_, i) {
-                            final b = debtProvider.balances[i];
-                            final amount =
-                                (b['balance'] as num?)?.toDouble() ?? 0;
-                            final name = b['name']?.toString() ?? '';
-                            final isPos = amount > 0;
-                            return Container(
-                              width: 160,
-                              margin: const EdgeInsets.only(right: 12),
-                              child: LiquidGlass(
-                                borderRadius: BorderRadius.circular(16),
-                                padding: const EdgeInsets.all(14),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      name,
-                                      style: const TextStyle(
-                                        color: AppTheme.textPrimary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      isPos
-                                          ? '+${amount.abs().toStringAsFixed(0)} сом'
-                                          : '-${amount.abs().toStringAsFixed(0)} сом',
-                                      style: TextStyle(
-                                        color: isPos
-                                            ? AppTheme.success
-                                            : AppTheme.danger,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                  ],
 
-                  // ── Recent Bills ───────────────────────────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Недавние счета',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (_recentBills.isNotEmpty)
-                            Text(
-                              'Все',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.accent,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-                  if (auth.isGuest)
+                    // Quick Actions — two large glassmorphism cards
                     SliverToBoxAdapter(
-                      child: _GuestBillsPlaceholder(
-                          onCreateBill: _openNewBill),
-                    )
-                  else if (_loadingBills)
-                    const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                              color: AppTheme.primary),
-                        ),
-                      ),
-                    )
-                  else if (_recentBills.isEmpty)
-                    SliverToBoxAdapter(
-                      child: _EmptyBillsState(onCreateBill: _openNewBill),
-                    )
-                  else
-                    SliverPadding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (_, i) =>
-                              _BillCard(bill: _recentBills[i]),
-                          childCount: _recentBills.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.receipt_long_rounded,
+                                label: 'Новый счёт',
+                                emoji: '🧾',
+                                gradient: AppTheme.primaryGradient,
+                                onTap: _openNewBill,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.camera_alt_rounded,
+                                label: 'Сканировать чек',
+                                emoji: '📸',
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFF8F5E), Color(0xFFFFBE76)],
+                                ),
+                                onTap: _openNewBill,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
 
-                  // Bottom padding for FAB + nav bar
-                  const SliverToBoxAdapter(
-                      child: SizedBox(height: 120)),
-                ],
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                    // Balance summary
+                    if (!auth.isGuest && debtProvider.balances.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Text('Баланс', style: AppTheme.headingStyle(fontSize: 18)),
+                        ),
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 90,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: debtProvider.balances.length.clamp(0, 4),
+                            itemBuilder: (_, i) {
+                              final b = debtProvider.balances[i];
+                              final amount = (b['balance'] as num?)?.toDouble() ?? 0;
+                              final name = b['name']?.toString() ?? '';
+                              final isPos = amount > 0;
+                              return Container(
+                                width: 160,
+                                margin: const EdgeInsets.only(right: 12),
+                                child: LiquidGlass(
+                                  borderRadius: BorderRadius.circular(16),
+                                  padding: const EdgeInsets.all(14),
+                                  fillColor: isPos
+                                      ? AppTheme.success.withValues(alpha: 0.08)
+                                      : AppTheme.danger.withValues(alpha: 0.08),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(name,
+                                          style: const TextStyle(
+                                            color: AppTheme.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isPos
+                                            ? '+${amount.abs().toStringAsFixed(0)} сом'
+                                            : '-${amount.abs().toStringAsFixed(0)} сом',
+                                        style: AppTheme.moneyStyle(fontSize: 15).copyWith(
+                                          color: isPos ? AppTheme.success : AppTheme.danger,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                    ],
+
+                    // Recent Bills header
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Text('Последние разделения', style: AppTheme.headingStyle(fontSize: 18)),
+                            const Spacer(),
+                            if (_recentBills.isNotEmpty)
+                              Text('Все',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                    if (auth.isGuest)
+                      SliverToBoxAdapter(child: _GuestBillsPlaceholder(onCreateBill: _openNewBill))
+                    else if (_loadingBills)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+                        ),
+                      )
+                    else if (_recentBills.isEmpty)
+                      SliverToBoxAdapter(child: _EmptyBillsState(onCreateBill: _openNewBill))
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (_, i) => _BillCard(bill: _recentBills[i]),
+                            childCount: _recentBills.length,
+                          ),
+                        ),
+                      ),
+
+                    const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // ── FAB ─────────────────────────────────────────────────────
-          Positioned(
-            right: 20,
-            bottom: 90,
-            child: _GradientFAB(onTap: _openNewBill),
-          ),
-        ],
+            // Golden FAB with glow
+            Positioned(
+              right: 20,
+              bottom: 90,
+              child: _GradientFAB(onTap: _openNewBill),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -334,33 +285,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ── Sub-widgets ──────────────────────────────────────────────────────────────
+// Sub-widgets
 
-class _QuickActionPill extends StatelessWidget {
+class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String emoji;
+  final Gradient gradient;
   final VoidCallback onTap;
 
-  const _QuickActionPill(
-      {required this.icon, required this.label, required this.onTap});
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.emoji,
+    required this.gradient,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return LiquidGlass(
-      borderRadius: BorderRadius.circular(50),
+      borderRadius: BorderRadius.circular(20),
       interactive: true,
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppTheme.accent),
-          const SizedBox(width: 7),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             label,
             style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
@@ -386,15 +361,10 @@ class _BillCard extends StatelessWidget {
       try {
         final date = DateTime.parse(createdAt);
         final diff = DateTime.now().difference(date);
-        if (diff.inDays == 0) {
-          dateStr = 'Сегодня';
-        } else if (diff.inDays == 1) {
-          dateStr = 'Вчера';
-        } else if (diff.inDays < 7) {
-          dateStr = '${diff.inDays} дн. назад';
-        } else {
-          dateStr = DateFormat('d MMM').format(date);
-        }
+        if (diff.inDays == 0) dateStr = 'Сегодня';
+        else if (diff.inDays == 1) dateStr = 'Вчера';
+        else if (diff.inDays < 7) dateStr = '${diff.inDays} дн. назад';
+        else dateStr = DateFormat('d MMM').format(date);
       } catch (_) {}
     }
 
@@ -428,8 +398,9 @@ class _BillCard extends StatelessWidget {
                 color: AppTheme.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.receipt_long_rounded,
-                  color: AppTheme.primary, size: 22),
+              child: const Center(
+                child: Text('🍽️', style: TextStyle(fontSize: 20)),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -437,9 +408,7 @@ class _BillCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title?.isNotEmpty == true
-                        ? title!
-                        : 'Счёт #${bill['id']}',
+                    title?.isNotEmpty == true ? title! : 'Счёт #${bill['id']}',
                     style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 15,
@@ -449,27 +418,14 @@ class _BillCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Text(
-                        dateStr,
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text(dateStr,
+                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                       if (people.isNotEmpty) ...[
                         const SizedBox(width: 8),
-                        const Text('·',
-                            style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12)),
+                        const Text('·', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                         const SizedBox(width: 8),
-                        Text(
-                          '${people.length} чел.',
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
+                        Text('${people.length} чел.',
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                       ],
                     ],
                   ),
@@ -478,11 +434,7 @@ class _BillCard extends StatelessWidget {
             ),
             Text(
               '${total.toStringAsFixed(0)} сом',
-              style: const TextStyle(
-                color: AppTheme.success,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTheme.moneyStyle(fontSize: 16),
             ),
           ],
         ),
@@ -513,7 +465,7 @@ class _GradientFAB extends StatelessWidget {
             ),
           ],
         ),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+        child: const Icon(Icons.add_rounded, color: Color(0xFF1A1A1A), size: 30),
       ),
     );
   }
@@ -532,36 +484,31 @@ class _EmptyBillsState extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
         child: Column(
           children: [
-            const Text('😴', style: TextStyle(fontSize: 48)),
+            const Text('🍽️', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 12),
-            const Text(
-              'Счетов пока нет',
-              style: TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Пока тут пусто', style: AppTheme.headingStyle(fontSize: 17)),
             const SizedBox(height: 6),
             const Text(
-              'Разделите первый счёт,\nи он появится здесь',
+              'Время ужинать?\nРазделите первый счёт',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
             SizedBox(
               height: 44,
-              child: FilledButton.icon(
-                onPressed: onCreateBill,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Создать счёт'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: FilledButton.icon(
+                  onPressed: onCreateBill,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Создать счёт'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
@@ -592,37 +539,34 @@ class _GuestBillsPlaceholder extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Войдите, чтобы сохранять историю',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
+                  const Text('Войдите, чтобы сохранять историю',
+                      style: TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      )),
                   const SizedBox(height: 4),
-                  Text(
-                    'Счета гостей не сохраняются',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
+                  Text('Счета гостей не сохраняются',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 ],
               ),
             ),
-            FilledButton(
-              onPressed: onCreateBill,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                textStyle: const TextStyle(fontSize: 13),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text('Создать'),
+              child: FilledButton(
+                onPressed: onCreateBill,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  textStyle: const TextStyle(fontSize: 13),
+                ),
+                child: const Text('Создать'),
+              ),
             ),
           ],
         ),
@@ -643,7 +587,7 @@ class _Blob extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.22),
+        color: color.withValues(alpha: 0.18),
       ),
     );
   }

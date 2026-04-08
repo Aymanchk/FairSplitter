@@ -42,180 +42,180 @@ class _DebtsScreenState extends State<DebtsScreen>
     final dp = context.watch<DebtProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -50,
-            left: -40,
-            child: _Blob(color: AppTheme.danger, size: 180),
-          ),
-          Positioned(
-            bottom: 80,
-            right: -30,
-            child: _Blob(color: AppTheme.success, size: 140),
-          ),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Header ──────────────────────────────────────────
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                  child: Text(
-                    'Долги',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-
-                if (auth.isGuest)
-                  Expanded(child: _GuestPlaceholder())
-                else ...[
-                  // ── Balance summary scroll ─────────────────────────
-                  if (dp.balances.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 88,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: dp.balances.length,
-                        itemBuilder: (_, i) {
-                          final b = dp.balances[i];
-                          final amount =
-                              (b['balance'] as num?)?.toDouble() ?? 0;
-                          final name = b['name']?.toString() ?? '';
-                          final isPos = amount > 0;
-                          return Container(
-                            width: 170,
-                            margin: const EdgeInsets.only(right: 12),
-                            child: LiquidGlass(
-                              borderRadius: BorderRadius.circular(16),
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(name,
-                                      style: const TextStyle(
-                                          color: AppTheme.textPrimary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13),
-                                      overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    isPos
-                                        ? '+ ${amount.abs().toStringAsFixed(0)} сом'
-                                        : '− ${amount.abs().toStringAsFixed(0)} сом',
-                                    style: TextStyle(
-                                      color: isPos
-                                          ? AppTheme.success
-                                          : AppTheme.danger,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    isPos ? 'должен вам' : 'вы должны',
-                                    style: const TextStyle(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 11),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 14),
-
-                  // ── Tab switcher ──────────────────────────────────
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -50,
+              left: -40,
+              child: _Blob(color: const Color(0xFFFF6B6B), size: 180),
+            ),
+            Positioned(
+              bottom: 80,
+              right: -30,
+              child: _Blob(color: const Color(0xFF4ECDC4), size: 140),
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Header ──────────────────────────────────────────
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: LiquidGlass(
-                      borderRadius: BorderRadius.circular(14),
-                      padding: const EdgeInsets.all(4),
-                      child: TabBar(
-                        controller: _tabController,
-                        indicator: BoxDecoration(
-                          color: AppTheme.primary,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: AppTheme.textSecondary,
-                        dividerHeight: 0,
-                        labelStyle: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14),
-                        tabs: const [
-                          Tab(text: 'Активные'),
-                          Tab(text: 'Оплаченные'),
-                        ],
-                        onTap: (i) {
-                          context.read<DebtProvider>().loadDebts(
-                                show: i == 0 ? 'active' : 'paid',
-                              );
-                        },
-                      ),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Text(
+                      'Долги',
+                      style: AppTheme.headingStyle(),
                     ),
                   ),
 
-                  const SizedBox(height: 12),
-
-                  Expanded(
-                    child: dp.isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                                color: AppTheme.primary))
-                        : dp.debts.isEmpty
-                            ? _EmptyDebts()
-                            : RefreshIndicator(
-                                onRefresh: () async {
-                                  await dp.loadDebts(
-                                    show: _tabController.index == 0
-                                        ? 'active'
-                                        : 'paid',
-                                  );
-                                  await dp.loadSummary();
-                                },
-                                color: AppTheme.primary,
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  itemCount: dp.debts.length,
-                                  itemBuilder: (_, i) => _DebtCard(
-                                    debt: dp.debts[i],
-                                    currentUserId: auth.userId,
-                                    onMarkPaid: () async {
-                                      await dp.markPaid(
-                                          dp.debts[i]['id'] as int);
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          content:
-                                              Text('Долг отмечен оплаченным'),
-                                        ));
-                                      }
-                                    },
-                                    onShowQR: () =>
-                                        _showQRModal(dp.debts[i]),
-                                  ),
+                  if (auth.isGuest)
+                    Expanded(child: _GuestPlaceholder())
+                  else ...[
+                    // ── Balance summary scroll ─────────────────────────
+                    if (dp.balances.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 88,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: dp.balances.length,
+                          itemBuilder: (_, i) {
+                            final b = dp.balances[i];
+                            final amount =
+                                (b['balance'] as num?)?.toDouble() ?? 0;
+                            final name = b['name']?.toString() ?? '';
+                            final isPos = amount > 0;
+                            return Container(
+                              width: 170,
+                              margin: const EdgeInsets.only(right: 12),
+                              child: LiquidGlass(
+                                borderRadius: BorderRadius.circular(16),
+                                padding: const EdgeInsets.all(14),
+                                fillColor: isPos
+                                    ? AppTheme.success.withValues(alpha: 0.08)
+                                    : AppTheme.danger.withValues(alpha: 0.08),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(name,
+                                        style: const TextStyle(
+                                            color: AppTheme.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13),
+                                        overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isPos
+                                          ? '+ ${amount.abs().toStringAsFixed(0)} сом'
+                                          : '− ${amount.abs().toStringAsFixed(0)} сом',
+                                      style: AppTheme.moneyStyle(fontSize: 14).copyWith(
+                                        color: isPos
+                                            ? AppTheme.success
+                                            : AppTheme.danger,
+                                      ),
+                                    ),
+                                    Text(
+                                      isPos ? 'должен вам' : 'вы должны',
+                                      style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 11),
+                                    ),
+                                  ],
                                 ),
                               ),
-                  ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 14),
+
+                    // ── Tab switcher ──────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: LiquidGlass(
+                        borderRadius: BorderRadius.circular(14),
+                        padding: const EdgeInsets.all(4),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: BoxDecoration(
+                            color: AppTheme.primary,
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          labelColor: const Color(0xFF1A1A1A),
+                          unselectedLabelColor: AppTheme.textSecondary,
+                          dividerHeight: 0,
+                          labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14),
+                          tabs: const [
+                            Tab(text: 'Активные'),
+                            Tab(text: 'Оплаченные'),
+                          ],
+                          onTap: (i) {
+                            context.read<DebtProvider>().loadDebts(
+                                  show: i == 0 ? 'active' : 'paid',
+                                );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Expanded(
+                      child: dp.isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  color: AppTheme.primary))
+                          : dp.debts.isEmpty
+                              ? _EmptyDebts()
+                              : RefreshIndicator(
+                                  onRefresh: () async {
+                                    await dp.loadDebts(
+                                      show: _tabController.index == 0
+                                          ? 'active'
+                                          : 'paid',
+                                    );
+                                    await dp.loadSummary();
+                                  },
+                                  color: AppTheme.primary,
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    itemCount: dp.debts.length,
+                                    itemBuilder: (_, i) => _DebtCard(
+                                      debt: dp.debts[i],
+                                      currentUserId: auth.userId,
+                                      onMarkPaid: () async {
+                                        await dp.markPaid(
+                                            dp.debts[i]['id'] as int);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                            content:
+                                                Text('Долг отмечен оплаченным'),
+                                          ));
+                                        }
+                                      },
+                                      onShowQR: () =>
+                                          _showQRModal(dp.debts[i]),
+                                    ),
+                                  ),
+                                ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -252,10 +252,9 @@ class _DebtsScreenState extends State<DebtsScreen>
             const SizedBox(height: 6),
             Text(
               '${amount.toStringAsFixed(0)} сом',
-              style: const TextStyle(
-                  color: AppTheme.success,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold),
+              style: AppTheme.moneyStyle(fontSize: 30).copyWith(
+                color: AppTheme.success,
+              ),
             ),
             Text(
               '${from['name']} → ${to['name']}',
@@ -270,8 +269,8 @@ class _DebtsScreenState extends State<DebtsScreen>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
-                      blurRadius: 20),
+                      color: AppTheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 24),
                 ],
               ),
               child: QrImageView(
@@ -421,10 +420,8 @@ class _DebtCard extends StatelessWidget {
                   ),
                   Text(
                     '${amount.toStringAsFixed(0)} сом',
-                    style: TextStyle(
+                    style: AppTheme.moneyStyle(fontSize: 17).copyWith(
                       color: isIOwe ? AppTheme.danger : AppTheme.success,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -460,11 +457,11 @@ class _DebtCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: const [
                               Icon(Icons.qr_code_rounded,
-                                  size: 15, color: AppTheme.accent),
+                                  size: 15, color: AppTheme.primary),
                               SizedBox(width: 6),
                               Text('QR-код',
                                   style: TextStyle(
-                                      color: AppTheme.accent,
+                                      color: AppTheme.primary,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600)),
                             ],
@@ -483,6 +480,7 @@ class _DebtCard extends StatelessWidget {
                               style: TextStyle(fontSize: 13)),
                           style: FilledButton.styleFrom(
                             backgroundColor: AppTheme.success,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

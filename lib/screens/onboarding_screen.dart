@@ -19,6 +19,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late AnimationController _floatController;
   late Animation<double> _fadeAnim;
   late Animation<double> _floatAnim;
+  final _pageController = PageController();
+  int _currentPage = 0;
+
+  static const _slides = [
+    _SlideData(
+      emoji: '🍽️',
+      title: 'Дели счёт, а не дружбу',
+      subtitle: 'Разделяйте расходы за ужин честно и без споров',
+    ),
+    _SlideData(
+      emoji: '📸',
+      title: 'Сфоткай чек — мы разберёмся',
+      subtitle: 'Сканируйте чек камерой, и мы распознаем все позиции',
+    ),
+    _SlideData(
+      emoji: '💸',
+      title: 'Каждый платит за своё',
+      subtitle: 'Отслеживайте долги и отправляйте напоминания друзьям',
+    ),
+  ];
 
   @override
   void initState() {
@@ -46,6 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   void dispose() {
     _fadeController.dispose();
     _floatController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -65,221 +86,247 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          // ── Ambient blobs ──────────────────────────────────────────────
-          Positioned(
-            top: -80,
-            left: -60,
-            child: _Blob(color: AppTheme.primary, size: 280),
-          ),
-          Positioned(
-            top: 100,
-            right: -80,
-            child: _Blob(color: AppTheme.accent, size: 220),
-          ),
-          Positioned(
-            bottom: 60,
-            left: 40,
-            child: _Blob(color: const Color(0xFF3B82F6), size: 180),
-          ),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            // Warm ambient blobs
+            Positioned(
+              top: -80,
+              left: -60,
+              child: _Blob(color: const Color(0xFFF5A623), size: 280),
+            ),
+            Positioned(
+              top: 100,
+              right: -80,
+              child: _Blob(color: const Color(0xFFFFD166), size: 220),
+            ),
+            Positioned(
+              bottom: 60,
+              left: 40,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 180),
+            ),
 
-          // ── Content ───────────────────────────────────────────────────
-          SafeArea(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: Column(
-                children: [
-                  const Spacer(flex: 2),
+            SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: Column(
+                  children: [
+                    const Spacer(flex: 1),
 
-                  // Floating mascot illustration
-                  AnimatedBuilder(
-                    animation: _floatAnim,
-                    builder: (_, __) => Transform.translate(
-                      offset: Offset(0, -_floatAnim.value),
-                      child: Column(
-                        children: [
-                          // Receipt character
-                          Container(
-                            width: 140,
-                            height: 140,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  AppTheme.primary.withValues(alpha: 0.3),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                            child: const Center(
-                              child: Text('🧾', style: TextStyle(fontSize: 72)),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Sparkle accent
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('✨', style: TextStyle(fontSize: 18)),
-                              const SizedBox(width: 8),
-                              const Text('🎉', style: TextStyle(fontSize: 14)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  // App name
-                  Text(
-                    'Fair Splitter',
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: -0.8,
-                      shadows: [
-                        Shadow(
-                          color: AppTheme.primary.withValues(alpha: 0.5),
-                          blurRadius: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Делим честно',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-
-                  const Spacer(flex: 2),
-
-                  // ── Feature pills ────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _FeaturePill('📸 Скан чека'),
-                        const SizedBox(width: 8),
-                        _FeaturePill('💸 Долги'),
-                        const SizedBox(width: 8),
-                        _FeaturePill('💬 Чат'),
-                      ],
-                    ),
-                  ),
-
-                  const Spacer(flex: 1),
-
-                  // ── CTA buttons ─────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        // Primary — Start
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary
-                                      .withValues(alpha: 0.40),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: FilledButton(
-                              onPressed: _goToLogin,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text(
-                                'Начать',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Ghost — Guest mode
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: LiquidGlass(
-                            borderRadius: BorderRadius.circular(16),
-                            interactive: true,
-                            onTap: _continueAsGuest,
-                            padding: EdgeInsets.zero,
-                            child: Center(
-                              child: Text(
-                                'Гостевой режим',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Login link
-                        GestureDetector(
-                          onTap: _goToLogin,
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'Уже есть аккаунт? ',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 14,
-                              ),
+                    // Page view for slides
+                    SizedBox(
+                      height: 360,
+                      child: PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: (i) => setState(() => _currentPage = i),
+                        itemCount: _slides.length,
+                        itemBuilder: (_, i) {
+                          final slide = _slides[i];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                TextSpan(
-                                  text: 'Войти',
-                                  style: TextStyle(
-                                    color: AppTheme.accent,
-                                    fontWeight: FontWeight.w600,
+                                // Floating emoji mascot
+                                AnimatedBuilder(
+                                  animation: _floatAnim,
+                                  builder: (_, __) => Transform.translate(
+                                    offset: Offset(0, -_floatAnim.value),
+                                    child: Container(
+                                      width: 140,
+                                      height: 140,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            AppTheme.primary.withValues(alpha: 0.3),
+                                            Colors.transparent,
+                                          ],
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(slide.emoji,
+                                            style: const TextStyle(fontSize: 72)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                Text(
+                                  slide.title,
+                                  textAlign: TextAlign.center,
+                                  style: AppTheme.headingStyle(fontSize: 28),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  slide.subtitle,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: AppTheme.textSecondary,
+                                    height: 1.4,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+
+                    // Page indicator dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(3, (i) {
+                        final isActive = i == _currentPage;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: isActive ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: isActive
+                                ? AppTheme.primary
+                                : AppTheme.textSecondary.withValues(alpha: 0.3),
+                          ),
+                        );
+                      }),
+                    ),
+
+                    const Spacer(flex: 1),
+
+                    // Feature pills
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _FeaturePill('📸 Скан чека'),
+                          const SizedBox(width: 8),
+                          _FeaturePill('💰 Долги'),
+                          const SizedBox(width: 8),
+                          _FeaturePill('💬 Чат'),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // CTA buttons
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          // Primary — Start
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primary.withValues(alpha: 0.40),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: FilledButton(
+                                onPressed: _goToLogin,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Начать',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1A1A1A),
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Ghost — Guest mode
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: LiquidGlass(
+                              borderRadius: BorderRadius.circular(16),
+                              interactive: true,
+                              onTap: _continueAsGuest,
+                              padding: EdgeInsets.zero,
+                              child: Center(
+                                child: Text(
+                                  'Без регистрации',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Login link
+                          GestureDetector(
+                            onTap: _goToLogin,
+                            child: RichText(
+                              text: TextSpan(
+                                text: 'Уже есть аккаунт? ',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 14,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'Войти',
+                                    style: TextStyle(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class _SlideData {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  const _SlideData({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+  });
 }
 
 class _FeaturePill extends StatelessWidget {
@@ -315,7 +362,7 @@ class _Blob extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.28),
+        color: color.withValues(alpha: 0.20),
       ),
     );
   }

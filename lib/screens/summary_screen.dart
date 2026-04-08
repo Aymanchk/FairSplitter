@@ -44,14 +44,14 @@ class _SummaryScreenState extends State<SummaryScreen>
     });
   }
 
-  void _trySaveBill() {
+  Future<void> _trySaveBill() async {
     if (_saved) return;
     _saved = true;
     final provider = context.read<BillProvider>();
     final auth = context.read<AuthProvider>();
     if (auth.isGuest || !auth.isLoggedIn) return;
     try {
-      auth.api.saveBill(
+      await auth.api.saveBill(
         total: provider.total,
         serviceChargePercent: provider.serviceChargePercent,
         items: provider.items.map((i) => {'name': i.name, 'price': i.price}).toList(),
@@ -74,292 +74,293 @@ class _SummaryScreenState extends State<SummaryScreen>
     final report = ShareHelper.generateReport(provider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          // Ambient blobs
-          Positioned(
-            top: -60,
-            left: -40,
-            child: _Blob(color: AppTheme.primary, size: 220),
-          ),
-          Positioned(
-            bottom: 80,
-            right: -50,
-            child: _Blob(color: AppTheme.success, size: 160),
-          ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+        ),
+        child: Stack(
+          children: [
+            // Ambient blobs
+            Positioned(
+              top: -60,
+              left: -40,
+              child: _Blob(color: const Color(0xFFF5A623), size: 220),
+            ),
+            Positioned(
+              bottom: 80,
+              right: -50,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
+            ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                // ── Header ─────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(12),
-                          padding: const EdgeInsets.all(10),
-                          child: const Icon(Icons.arrow_back_ios_new_rounded,
-                              size: 18, color: AppTheme.textPrimary),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Итоги',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
+            SafeArea(
+              child: Column(
+                children: [
+                  // ── Header ─────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
                       children: [
-                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            padding: const EdgeInsets.all(10),
+                            child: const Icon(Icons.arrow_back_ios_new_rounded,
+                                size: 18, color: AppTheme.textPrimary),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Итоги',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                        // ── Success + confetti badge ────────────────
-                        FadeTransition(
-                          opacity: _confettiController,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, -0.4),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: _confettiController,
-                              curve: Curves.easeOutBack,
-                            )),
-                            child: LiquidGlass(
-                              borderRadius: BorderRadius.circular(50),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Text('🎉',
-                                      style: TextStyle(fontSize: 18)),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Счёт разделён!',
-                                    style: TextStyle(
-                                      color: AppTheme.success,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+
+                          // ── Success + confetti badge ────────────────
+                          FadeTransition(
+                            opacity: _confettiController,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, -0.4),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: _confettiController,
+                                curve: Curves.easeOutBack,
+                              )),
+                              child: LiquidGlass(
+                                borderRadius: BorderRadius.circular(50),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Text('🎉',
+                                        style: TextStyle(fontSize: 18)),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Счёт разделён!',
+                                      style: TextStyle(
+                                        color: AppTheme.success,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
                                     ),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.check_circle_rounded,
+                                        color: AppTheme.success, size: 18),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ── Animated total pill ─────────────────────
+                          AnimatedBuilder(
+                            animation: _totalCountAnim,
+                            builder: (_, __) => LiquidGlass(
+                              borderRadius: BorderRadius.circular(24),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 20),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    '${_totalCountAnim.value.toStringAsFixed(0)} сом',
+                                    style: AppTheme.moneyStyle(fontSize: 36),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.check_circle_rounded,
-                                      color: AppTheme.success, size: 18),
+                                  if (provider.serviceChargeEnabled) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания '
+                                      '(${provider.serviceChargeAmount.toStringAsFixed(0)} сом)',
+                                      style: const TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
                           ),
-                        ),
 
-                        const SizedBox(height: 20),
+                          const SizedBox(height: 12),
 
-                        // ── Animated total pill ─────────────────────
-                        AnimatedBuilder(
-                          animation: _totalCountAnim,
-                          builder: (_, __) => LiquidGlass(
-                            borderRadius: BorderRadius.circular(24),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 20),
-                            child: Column(
+                          // ── Stats row ──────────────────────────────
+                          LiquidGlass(
+                            borderRadius: BorderRadius.circular(20),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Text(
-                                  '${_totalCountAnim.value.toStringAsFixed(0)} сом',
-                                  style: const TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.textPrimary,
-                                    letterSpacing: -1,
-                                  ),
+                                _StatChip(
+                                  value: '${provider.items.length}',
+                                  label: 'Блюд',
                                 ),
-                                if (provider.serviceChargeEnabled) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания '
-                                    '(${provider.serviceChargeAmount.toStringAsFixed(0)} сом)',
-                                    style: const TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
+                                Container(
+                                    width: 1,
+                                    height: 28,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.08)),
+                                _StatChip(
+                                  value: '${provider.people.length}',
+                                  label: 'Человек',
+                                ),
+                                Container(
+                                    width: 1,
+                                    height: 28,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.08)),
+                                _StatChip(
+                                  value: '${_sharedCount(provider)}',
+                                  label: 'Общих',
+                                ),
                               ],
                             ),
                           ),
-                        ),
 
-                        const SizedBox(height: 12),
+                          const SizedBox(height: 20),
 
-                        // ── Stats row ──────────────────────────────
-                        LiquidGlass(
-                          borderRadius: BorderRadius.circular(20),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          // ── Per-person breakdown ────────────────────
+                          ...provider.people.map((person) {
+                            final items = provider.getPersonItems(person.id);
+                            final total = provider.getPersonTotal(person.id);
+                            return _PersonCard(
+                              person: person,
+                              items: items,
+                              total: total,
+                              provider: provider,
+                            );
+                          }),
+
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // ── Bottom share bar ───────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                    child: SafeArea(
+                      top: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        AppTheme.primary.withValues(alpha: 0.4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: FilledButton.icon(
+                                onPressed: () =>
+                                    ShareHelper.shareViaTelegram(report),
+                                icon: const Icon(Icons.send_rounded,
+                                    size: 18, color: Color(0xFF1A1A1A)),
+                                label: const Text('Telegram',
+                                    style: TextStyle(color: Color(0xFF1A1A1A))),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
                             children: [
-                              _StatChip(
-                                value: '${provider.items.length}',
-                                label: 'Блюд',
+                              Expanded(
+                                child: SizedBox(
+                                  height: 44,
+                                  child: LiquidGlass(
+                                    borderRadius: BorderRadius.circular(12),
+                                    interactive: true,
+                                    onTap: () =>
+                                        ShareHelper.shareViaWhatsApp(report),
+                                    padding: EdgeInsets.zero,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.chat_rounded,
+                                            size: 16,
+                                            color: AppTheme.textSecondary),
+                                        SizedBox(width: 6),
+                                        Text('WhatsApp',
+                                            style: TextStyle(
+                                                color: AppTheme.textSecondary,
+                                                fontSize: 13)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                              Container(
-                                  width: 1,
-                                  height: 28,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.08)),
-                              _StatChip(
-                                value: '${provider.people.length}',
-                                label: 'Человек',
-                              ),
-                              Container(
-                                  width: 1,
-                                  height: 28,
-                                  color: Colors.white
-                                      .withValues(alpha: 0.08)),
-                              _StatChip(
-                                value: '${_sharedCount(provider)}',
-                                label: 'Общих',
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: SizedBox(
+                                  height: 44,
+                                  child: LiquidGlass(
+                                    borderRadius: BorderRadius.circular(12),
+                                    interactive: true,
+                                    onTap: () =>
+                                        ShareHelper.shareViaSystem(report),
+                                    padding: EdgeInsets.zero,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.share_rounded,
+                                            size: 16,
+                                            color: AppTheme.textSecondary),
+                                        SizedBox(width: 6),
+                                        Text('Ещё',
+                                            style: TextStyle(
+                                                color: AppTheme.textSecondary,
+                                                fontSize: 13)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Per-person breakdown ────────────────────
-                        ...provider.people.map((person) {
-                          final items = provider.getPersonItems(person.id);
-                          final total = provider.getPersonTotal(person.id);
-                          return _PersonCard(
-                            person: person,
-                            items: items,
-                            total: total,
-                            provider: provider,
-                          );
-                        }),
-
-                        const SizedBox(height: 16),
-                      ],
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-
-                // ── Bottom share bar ───────────────────────────────
-                Container(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: SafeArea(
-                    top: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.primaryGradient,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      AppTheme.primary.withValues(alpha: 0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: FilledButton.icon(
-                              onPressed: () =>
-                                  ShareHelper.shareViaTelegram(report),
-                              icon: const Icon(Icons.send_rounded, size: 18),
-                              label: const Text('Telegram'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 44,
-                                child: LiquidGlass(
-                                  borderRadius: BorderRadius.circular(12),
-                                  interactive: true,
-                                  onTap: () =>
-                                      ShareHelper.shareViaWhatsApp(report),
-                                  padding: EdgeInsets.zero,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(Icons.chat_rounded,
-                                          size: 16,
-                                          color: AppTheme.textSecondary),
-                                      SizedBox(width: 6),
-                                      Text('WhatsApp',
-                                          style: TextStyle(
-                                              color: AppTheme.textSecondary,
-                                              fontSize: 13)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: SizedBox(
-                                height: 44,
-                                child: LiquidGlass(
-                                  borderRadius: BorderRadius.circular(12),
-                                  interactive: true,
-                                  onTap: () =>
-                                      ShareHelper.shareViaSystem(report),
-                                  padding: EdgeInsets.zero,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(Icons.share_rounded,
-                                          size: 16,
-                                          color: AppTheme.textSecondary),
-                                      SizedBox(width: 6),
-                                      Text('Ещё',
-                                          style: TextStyle(
-                                              color: AppTheme.textSecondary,
-                                              fontSize: 13)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -394,7 +395,7 @@ class _PersonCard extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.06),
+            color: const Color(0xFFF5A623).withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -444,10 +445,8 @@ class _PersonCard extends StatelessWidget {
                 ),
                 Text(
                   '${total.toStringAsFixed(0)} сом',
-                  style: TextStyle(
+                  style: AppTheme.moneyStyle(fontSize: 20).copyWith(
                     color: person.avatarColor,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],

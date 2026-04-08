@@ -103,339 +103,341 @@ class _ProfileScreenState extends State<ProfileScreen>
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          Positioned(
-            top: -40,
-            left: -30,
-            child: _Blob(color: AppTheme.primary, size: 200),
-          ),
-          Positioned(
-            bottom: 100,
-            right: -50,
-            child: _Blob(color: AppTheme.accent, size: 150),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Профиль',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  // ── Avatar with gradient ring ───────────────────
-                  GestureDetector(
-                    onTap: auth.isGuest ? null : _pickAvatar,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Rotating gradient ring
-                        if (!auth.isGuest)
-                          AnimatedBuilder(
-                            animation: _ringController,
-                            builder: (_, __) => Transform.rotate(
-                              angle: _ringController.value * 2 * math.pi,
-                              child: CustomPaint(
-                                size: const Size(124, 124),
-                                painter: _GradientRingPainter(),
-                              ),
-                            ),
-                          ),
-                        CircleAvatar(
-                          radius: auth.isGuest ? 52 : 48,
-                          backgroundColor: AppTheme.primary,
-                          backgroundImage: auth.userAvatarUrl != null
-                              ? CachedNetworkImageProvider(
-                                  auth.userAvatarUrl!)
-                              : null,
-                          child: _uploadingAvatar
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2)
-                              : auth.userAvatarUrl == null
-                                  ? Text(
-                                      (auth.userName ?? 'G')[0].toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 38,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : null,
-                        ),
-                        if (!auth.isGuest)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.accent,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: AppTheme.background, width: 2),
-                              ),
-                              child: const Icon(Icons.camera_alt_rounded,
-                                  size: 14, color: Colors.white),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-                  Text(
-                    auth.userName ?? 'Гость',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  if (!auth.isGuest)
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -40,
+              left: -30,
+              child: _Blob(color: const Color(0xFFF5A623), size: 200),
+            ),
+            Positioned(
+              bottom: 100,
+              right: -50,
+              child: _Blob(color: const Color(0xFFFFD166), size: 150),
+            ),
+            Positioned(
+              top: 60,
+              right: 30,
+              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+            ),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
                     Text(
-                      auth.userEmail ?? '',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppTheme.textSecondary),
+                      'Профиль',
+                      style: AppTheme.headingStyle(fontSize: 28),
                     ),
+                    const SizedBox(height: 28),
 
-                  const SizedBox(height: 20),
-
-                  // ── Quick stats ──────────────────────────────────
-                  if (!auth.isGuest) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _StatPill(label: 'Счетов', value: '—'),
-                        const SizedBox(width: 8),
-                        _StatPill(label: 'Потрачено', value: '—'),
-                        const SizedBox(width: 8),
-                        _StatPill(label: 'Друзей', value: '—'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // ── Guest banner ─────────────────────────────────
-                  if (auth.isGuest) ...[
-                    LiquidGlass(
-                      borderRadius: BorderRadius.circular(20),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
+                    // ── Avatar with gradient ring ───────────────────
+                    GestureDetector(
+                      onTap: auth.isGuest ? null : _pickAvatar,
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          const Text('👤',
-                              style: TextStyle(fontSize: 36)),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Вы вошли как гость',
-                            style: TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Зарегистрируйтесь, чтобы сохранять историю и общаться с друзьями',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 46,
-                            child: FilledButton(
-                              onPressed: _logout,
-                              child: const Text('Зарегистрироваться'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 100),
-                  ] else ...[
-                    // ── Menu items ─────────────────────────────────
-                    _MenuCard(
-                      items: [
-                        _MenuItem(
-                          icon: Icons.bar_chart_rounded,
-                          label: 'Статистика',
-                          color: AppTheme.primary,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const StatsScreen()),
-                          ),
-                        ),
-                        _MenuItem(
-                          icon: Icons.group_rounded,
-                          label: 'Группы друзей',
-                          color: AppTheme.accent,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const GroupsScreen()),
-                          ),
-                        ),
-                        _MenuItemWithBadge(
-                          icon: Icons.notifications_rounded,
-                          label: 'Уведомления',
-                          color: AppTheme.success,
-                          onTap: () {
-                            context
-                                .read<NotificationProvider>()
-                                .loadNotifications();
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) =>
-                                    const NotificationsScreen()));
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // ── Edit profile card ──────────────────────────
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.06)),
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          _FieldRow(
-                            icon: Icons.person_rounded,
-                            label: 'Имя',
-                            ctrl: _nameCtrl,
-                            editing: _isEditing,
-                          ),
-                          Divider(
-                              height: 24,
-                              color: Colors.white.withValues(alpha: 0.06)),
-                          _FieldRow(
-                            icon: Icons.email_rounded,
-                            label: 'Email',
-                            ctrl: _emailCtrl,
-                            editing: _isEditing,
-                            kb: TextInputType.emailAddress,
-                          ),
-                          Divider(
-                              height: 24,
-                              color: Colors.white.withValues(alpha: 0.06)),
-                          _FieldRow(
-                            icon: Icons.phone_rounded,
-                            label: 'Телефон',
-                            ctrl: _phoneCtrl,
-                            editing: _isEditing,
-                            kb: TextInputType.phone,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Edit / Save row
-                    if (_isEditing)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  _nameCtrl.text = auth.userName ?? '';
-                                  _emailCtrl.text = auth.userEmail ?? '';
-                                  _phoneCtrl.text = auth.userPhone ?? '';
-                                  setState(() => _isEditing = false);
-                                },
-                                child: const Text('Отмена'),
+                          // Rotating gradient ring
+                          if (!auth.isGuest)
+                            AnimatedBuilder(
+                              animation: _ringController,
+                              builder: (_, __) => Transform.rotate(
+                                angle: _ringController.value * 2 * math.pi,
+                                child: CustomPaint(
+                                  size: const Size(124, 124),
+                                  painter: _GradientRingPainter(),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: FilledButton(
-                                onPressed:
-                                    auth.isLoading ? null : _saveProfile,
-                                child: auth.isLoading
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white),
+                          CircleAvatar(
+                            radius: auth.isGuest ? 52 : 48,
+                            backgroundColor: AppTheme.primary,
+                            backgroundImage: auth.userAvatarUrl != null
+                                ? CachedNetworkImageProvider(
+                                    auth.userAvatarUrl!)
+                                : null,
+                            child: _uploadingAvatar
+                                ? const CircularProgressIndicator(
+                                    color: Color(0xFF1A1A1A), strokeWidth: 2)
+                                : auth.userAvatarUrl == null
+                                    ? Text(
+                                        (auth.userName ?? 'G')[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 38,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
                                       )
-                                    : const Text('Сохранить'),
+                                    : null,
+                          ),
+                          if (!auth.isGuest)
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: AppTheme.background, width: 2),
+                                ),
+                                child: const Icon(Icons.camera_alt_rounded,
+                                    size: 14, color: Color(0xFF1A1A1A)),
                               ),
                             ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+                    Text(
+                      auth.userName ?? 'Гость',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    if (!auth.isGuest)
+                      Text(
+                        auth.userEmail ?? '',
+                        style: const TextStyle(
+                            fontSize: 13, color: AppTheme.textSecondary),
+                      ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Quick stats ──────────────────────────────────
+                    if (!auth.isGuest) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _StatPill(label: 'Счетов', value: '—'),
+                          const SizedBox(width: 8),
+                          _StatPill(label: 'Потрачено', value: '—'),
+                          const SizedBox(width: 8),
+                          _StatPill(label: 'Друзей', value: '—'),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // ── Guest banner ─────────────────────────────────
+                    if (auth.isGuest) ...[
+                      LiquidGlass(
+                        borderRadius: BorderRadius.circular(20),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const Text('👤',
+                                style: TextStyle(fontSize: 36)),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Вы вошли как гость',
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Зарегистрируйтесь, чтобы сохранять историю и общаться с друзьями',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 46,
+                              child: FilledButton(
+                                onPressed: _logout,
+                                child: const Text('Зарегистрироваться'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 100),
+                    ] else ...[
+                      // ── Menu items ─────────────────────────────────
+                      _MenuCard(
+                        items: [
+                          _MenuItem(
+                            icon: Icons.bar_chart_rounded,
+                            label: 'Статистика',
+                            color: AppTheme.primary,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => const StatsScreen()),
+                            ),
+                          ),
+                          _MenuItem(
+                            icon: Icons.group_rounded,
+                            label: 'Группы друзей',
+                            color: AppTheme.primary,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => const GroupsScreen()),
+                            ),
+                          ),
+                          _MenuItemWithBadge(
+                            icon: Icons.notifications_rounded,
+                            label: 'Уведомления',
+                            color: AppTheme.success,
+                            onTap: () {
+                              context
+                                  .read<NotificationProvider>()
+                                  .loadNotifications();
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) =>
+                                      const NotificationsScreen()));
+                            },
                           ),
                         ],
-                      )
-                    else
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Edit profile card ──────────────────────────
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.06)),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            _FieldRow(
+                              icon: Icons.person_rounded,
+                              label: 'Имя',
+                              ctrl: _nameCtrl,
+                              editing: _isEditing,
+                            ),
+                            Divider(
+                                height: 24,
+                                color: Colors.white.withValues(alpha: 0.06)),
+                            _FieldRow(
+                              icon: Icons.email_rounded,
+                              label: 'Email',
+                              ctrl: _emailCtrl,
+                              editing: _isEditing,
+                              kb: TextInputType.emailAddress,
+                            ),
+                            Divider(
+                                height: 24,
+                                color: Colors.white.withValues(alpha: 0.06)),
+                            _FieldRow(
+                              icon: Icons.phone_rounded,
+                              label: 'Телефон',
+                              ctrl: _phoneCtrl,
+                              editing: _isEditing,
+                              kb: TextInputType.phone,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Edit / Save row
+                      if (_isEditing)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 50,
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    _nameCtrl.text = auth.userName ?? '';
+                                    _emailCtrl.text = auth.userEmail ?? '';
+                                    _phoneCtrl.text = auth.userPhone ?? '';
+                                    setState(() => _isEditing = false);
+                                  },
+                                  child: const Text('Отмена'),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SizedBox(
+                                height: 50,
+                                child: FilledButton(
+                                  onPressed:
+                                      auth.isLoading ? null : _saveProfile,
+                                  child: auth.isLoading
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white),
+                                        )
+                                      : const Text('Сохранить'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(14),
+                            interactive: true,
+                            onTap: () => setState(() => _isEditing = true),
+                            padding: EdgeInsets.zero,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.edit_rounded,
+                                    size: 16, color: AppTheme.textSecondary),
+                                SizedBox(width: 8),
+                                Text('Редактировать профиль',
+                                    style: TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 14),
+
+                      // Logout
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(14),
-                          interactive: true,
-                          onTap: () => setState(() => _isEditing = true),
-                          padding: EdgeInsets.zero,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.edit_rounded,
-                                  size: 16, color: AppTheme.textSecondary),
-                              SizedBox(width: 8),
-                              Text('Редактировать профиль',
-                                  style: TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600)),
-                            ],
+                        child: OutlinedButton.icon(
+                          onPressed: _logout,
+                          icon: const Icon(Icons.logout_rounded,
+                              color: AppTheme.danger, size: 18),
+                          label: const Text('Выйти',
+                              style: TextStyle(color: AppTheme.danger)),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppTheme.danger),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
-
-                    const SizedBox(height: 14),
-
-                    // Logout
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton.icon(
-                        onPressed: _logout,
-                        icon: const Icon(Icons.logout_rounded,
-                            color: AppTheme.danger, size: 18),
-                        label: const Text('Выйти',
-                            style: TextStyle(color: AppTheme.danger)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.danger),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 100),
+                      const SizedBox(height: 100),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -671,8 +673,8 @@ class _GradientRingPainter extends CustomPainter {
       ..shader = SweepGradient(
         colors: const [
           AppTheme.primary,
-          AppTheme.accent,
-          Color(0xFF3B82F6),
+          AppTheme.primaryLight,
+          Color(0xFFFF8F5E),
           AppTheme.primary,
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));

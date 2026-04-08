@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
+  static const _timeout = Duration(seconds: 10);
+
   static String get _baseUrl {
     if (Platform.isAndroid) {
-      return 'http://192.168.51.229:8000/api';
+      return 'http://10.0.2.2:8000/api';
     }
     return 'http://localhost:8000/api';
   }
@@ -44,7 +46,7 @@ class ApiService {
         'password': password,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
       }),
-    );
+    ).timeout(_timeout);
     return _handleResponse(response);
   }
 
@@ -59,7 +61,7 @@ class ApiService {
         'email': email,
         'password': password,
       }),
-    );
+    ).timeout(_timeout);
     return _handleResponse(response);
   }
 
@@ -67,7 +69,7 @@ class ApiService {
     final response = await http.get(
       Uri.parse('$_baseUrl/auth/me/'),
       headers: _headers,
-    );
+    ).timeout(_timeout);
     return _handleResponse(response);
   }
 
@@ -85,7 +87,7 @@ class ApiService {
       Uri.parse('$_baseUrl/auth/me/'),
       headers: _headers,
       body: jsonEncode(body),
-    );
+    ).timeout(_timeout);
     return _handleResponse(response);
   }
 
@@ -333,13 +335,21 @@ class ApiService {
   // --- Helpers ---
 
   Map<String, dynamic> _handleResponse(http.Response response) {
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final Map<String, dynamic> body;
+    try {
+      body = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: 'Ошибка сервера (${response.statusCode})',
+      );
+    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }
     throw ApiException(
       statusCode: response.statusCode,
-      message: body['error'] as String? ?? 'Unknown error',
+      message: body['error'] as String? ?? 'Ошибка сервера',
     );
   }
 }

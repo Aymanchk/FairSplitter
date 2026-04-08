@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/chat_provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/liquid_glass.dart';
 import 'chat_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -19,9 +20,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
-      if (!auth.isGuest) {
-        context.read<ChatProvider>().loadRooms();
-      }
+      if (!auth.isGuest) context.read<ChatProvider>().loadRooms();
     });
   }
 
@@ -31,123 +30,142 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final chat = context.watch<ChatProvider>();
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Чаты',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  if (!auth.isGuest)
-                    IconButton(
-                      icon: const Icon(Icons.edit_square,
-                          color: AppTheme.accent),
-                      onPressed: () => _showNewChatDialog(context),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: auth.isGuest
-                    ? const _GuestPlaceholder()
-                    : chat.isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                                color: AppTheme.primary))
-                        : chat.rooms.isEmpty
-                            ? const _EmptyPlaceholder()
-                            : RefreshIndicator(
-                                color: AppTheme.primary,
-                                onRefresh: () => chat.loadRooms(),
-                                child: ListView.builder(
-                                  itemCount: chat.rooms.length,
-                                  itemBuilder: (context, index) {
-                                    return _ChatRoomTile(
-                                      room: chat.rooms[index],
-                                      currentUserId: auth.userId,
-                                    );
-                                  },
-                                ),
-                              ),
-              ),
-            ],
+      backgroundColor: AppTheme.background,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -40,
+            right: -30,
+            child: _Blob(color: AppTheme.accent, size: 160),
           ),
-        ),
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Header ─────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 16, 0),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Чаты',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      if (!auth.isGuest)
+                        LiquidGlass(
+                          borderRadius: BorderRadius.circular(12),
+                          interactive: true,
+                          onTap: () => _showNewChatSheet(context),
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(Icons.edit_rounded,
+                              size: 20, color: AppTheme.accent),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                Expanded(
+                  child: auth.isGuest
+                      ? _GuestPlaceholder()
+                      : chat.isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  color: AppTheme.primary))
+                          : chat.rooms.isEmpty
+                              ? _EmptyPlaceholder()
+                              : RefreshIndicator(
+                                  color: AppTheme.primary,
+                                  onRefresh: () => chat.loadRooms(),
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    itemCount: chat.rooms.length,
+                                    itemBuilder: (_, i) => _RoomTile(
+                                      room: chat.rooms[i],
+                                      currentUserId: auth.userId,
+                                    ),
+                                  ),
+                                ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void _showNewChatDialog(BuildContext context) {
-    final searchController = TextEditingController();
+  void _showNewChatSheet(BuildContext context) {
+    final searchCtrl = TextEditingController();
     List<Map<String, dynamic>> results = [];
     bool searching = false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
+        builder: (ctx, set) => Padding(
           padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
+            left: 20,
+            right: 20,
+            top: 20,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Новый чат',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
+              const Text('Новый чат',
+                  style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               TextField(
-                controller: searchController,
+                controller: searchCtrl,
                 decoration: const InputDecoration(
                   hintText: 'Поиск по имени или email',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: Icon(Icons.search_rounded),
                 ),
-                onChanged: (query) async {
-                  if (query.trim().length < 2) {
-                    setSheetState(() => results = []);
+                onChanged: (q) async {
+                  if (q.trim().length < 2) {
+                    set(() => results = []);
                     return;
                   }
-                  setSheetState(() => searching = true);
+                  set(() => searching = true);
                   try {
-                    final auth = context.read<AuthProvider>();
-                    final r = await auth.api.searchUsers(query.trim());
-                    setSheetState(() {
+                    final r =
+                        await context.read<AuthProvider>().api.searchUsers(q);
+                    set(() {
                       results = r;
                       searching = false;
                     });
-                  } catch (e) {
-                    setSheetState(() => searching = false);
+                  } catch (_) {
+                    set(() => searching = false);
                   }
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               if (searching)
                 const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(color: AppTheme.primary),
+                  padding: EdgeInsets.all(12),
+                  child:
+                      CircularProgressIndicator(color: AppTheme.primary),
                 ),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 300),
@@ -155,40 +173,32 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   shrinkWrap: true,
                   itemCount: results.length,
                   itemBuilder: (_, i) {
-                    final user = results[i];
-                    final avatarUrl = user['avatar'] as String?;
-                    final name = user['name'] as String;
+                    final u = results[i];
+                    final name = u['name'] as String;
+                    final avatarUrl = u['avatar'] as String?;
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppTheme.primary,
-                        backgroundImage: avatarUrl != null
-                            ? CachedNetworkImageProvider(avatarUrl)
-                            : null,
-                        child: avatarUrl == null
-                            ? Text(name[0].toUpperCase(),
-                                style: const TextStyle(color: Colors.white))
-                            : null,
-                      ),
+                      leading: _Avatar(
+                          name: name, avatarUrl: avatarUrl, radius: 20),
                       title: Text(name,
-                          style: const TextStyle(color: AppTheme.textPrimary)),
-                      subtitle: Text(user['email'] as String? ?? '',
                           style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 12)),
+                              color: AppTheme.textPrimary)),
+                      subtitle: Text(u['email'] as String? ?? '',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12)),
                       onTap: () async {
-                        Navigator.of(ctx).pop();
-                        final chatProvider = context.read<ChatProvider>();
-                        final room = await chatProvider
-                            .getOrCreateRoom(user['id'] as int);
+                        Navigator.pop(ctx);
+                        final chatProv = context.read<ChatProvider>();
+                        final room =
+                            await chatProv.getOrCreateRoom(u['id'] as int);
                         if (context.mounted) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                roomId: room['id'] as int,
-                                otherUserName: name,
-                                otherAvatarUrl: avatarUrl,
-                              ),
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              roomId: room['id'] as int,
+                              otherUserName: name,
+                              otherAvatarUrl: avatarUrl,
                             ),
-                          );
+                          ));
                         }
                       },
                     );
@@ -203,110 +213,135 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 }
 
-class _ChatRoomTile extends StatelessWidget {
+class _RoomTile extends StatelessWidget {
   final Map<String, dynamic> room;
   final int? currentUserId;
-
-  const _ChatRoomTile({required this.room, required this.currentUserId});
+  const _RoomTile({required this.room, required this.currentUserId});
 
   @override
   Widget build(BuildContext context) {
-    final participants =
+    final parts =
         List<Map<String, dynamic>>.from(room['participants'] ?? []);
-    final other = participants.firstWhere(
+    final other = parts.firstWhere(
       (p) => p['id'] != currentUserId,
-      orElse: () => participants.isNotEmpty ? participants.first : {'name': '?'},
+      orElse: () => parts.isNotEmpty ? parts.first : {'name': '?'},
     );
     final name = other['name'] as String? ?? '?';
     final avatarUrl = other['avatar'] as String?;
     final lastMsg = room['last_message'] as Map<String, dynamic>?;
     final unread = room['unread_count'] as int? ?? 0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primary,
-          backgroundImage:
-              avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-          child: avatarUrl == null
-              ? Text(name[0].toUpperCase(),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))
-              : null,
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          roomId: room['id'] as int,
+          otherUserName: name,
+          otherAvatarUrl: avatarUrl,
         ),
-        title: Text(name,
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.w500,
-            )),
-        subtitle: lastMsg != null
-            ? Text(
-                lastMsg['text'] as String? ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: unread > 0
-                      ? AppTheme.textPrimary
-                      : AppTheme.textSecondary,
-                  fontSize: 13,
+      )),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              _Avatar(name: name, avatarUrl: avatarUrl, radius: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name,
+                        style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15)),
+                    const SizedBox(height: 2),
+                    Text(
+                      lastMsg != null
+                          ? (lastMsg['text'] as String? ?? '')
+                          : 'Нет сообщений',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: unread > 0
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            : const Text('Нет сообщений',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-        trailing: unread > 0
-            ? Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text('$unread',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
-              )
-            : null,
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ChatScreen(
-                roomId: room['id'] as int,
-                otherUserName: name,
-                otherAvatarUrl: avatarUrl,
               ),
-            ),
-          );
-        },
+              if (unread > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text('$unread',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold)),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _GuestPlaceholder extends StatelessWidget {
-  const _GuestPlaceholder();
+class _Avatar extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
+  final double radius;
+  const _Avatar(
+      {required this.name, this.avatarUrl, required this.radius});
 
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppTheme.primary,
+      backgroundImage:
+          avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
+      child: avatarUrl == null
+          ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: radius * 0.75))
+          : null,
+    );
+  }
+}
+
+class _GuestPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_outline, size: 64, color: AppTheme.textSecondary),
-          SizedBox(height: 16),
+          Text('💬', style: TextStyle(fontSize: 52)),
+          SizedBox(height: 14),
           Text('Войдите в аккаунт',
-              style: TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
-          SizedBox(height: 4),
+              style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold)),
+          SizedBox(height: 6),
           Text('Чтобы общаться с друзьями',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-          SizedBox(height: 80),
         ],
       ),
     );
@@ -314,24 +349,41 @@ class _GuestPlaceholder extends StatelessWidget {
 }
 
 class _EmptyPlaceholder extends StatelessWidget {
-  const _EmptyPlaceholder();
-
   @override
   Widget build(BuildContext context) {
     return const Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.chat_bubble_outline,
-              size: 64, color: AppTheme.textSecondary),
-          SizedBox(height: 16),
+          Text('🗨️', style: TextStyle(fontSize: 52)),
+          SizedBox(height: 14),
           Text('Пока нет чатов',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
-          SizedBox(height: 4),
-          Text('Нажмите + чтобы начать общение',
+              style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold)),
+          SizedBox(height: 6),
+          Text('Нажмите ✏️ чтобы начать',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-          SizedBox(height: 80),
         ],
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _Blob({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.18),
       ),
     );
   }

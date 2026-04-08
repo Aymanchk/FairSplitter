@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'providers/bill_provider.dart';
 import 'providers/auth_provider.dart';
@@ -7,9 +9,16 @@ import 'providers/debt_provider.dart';
 import 'providers/group_provider.dart';
 import 'providers/notification_provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/register_screen.dart';
+import 'screens/onboarding_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ru');
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.transparent,
+  ));
   runApp(const FairSplitterApp());
 }
 
@@ -36,14 +45,15 @@ class FairSplitterApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
           create: (ctx) => NotificationProvider(ctx.read<AuthProvider>().api),
-          update: (ctx, auth, prev) => prev ?? NotificationProvider(auth.api),
+          update: (ctx, auth, prev) =>
+              prev ?? NotificationProvider(auth.api),
         ),
       ],
       child: MaterialApp(
         title: 'Fair Splitter',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        home: const RegisterScreen(),
+        home: const OnboardingScreen(),
       ),
     );
   }

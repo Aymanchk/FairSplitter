@@ -1,9 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/chat_provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/liquid_glass.dart';
 
 class ChatScreen extends StatefulWidget {
   final int roomId;
@@ -49,7 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
         );
       }
@@ -70,130 +72,179 @@ class _ChatScreenState extends State<ChatScreen> {
     final auth = context.watch<AuthProvider>();
     final messages = chat.getMessages(widget.roomId);
 
-    // Auto-scroll when new messages arrive
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        final currentScroll = _scrollController.position.pixels;
-        if (maxScroll - currentScroll < 150) {
-          _scrollToBottom();
-        }
+        final max = _scrollController.position.maxScrollExtent;
+        final cur = _scrollController.position.pixels;
+        if (max - cur < 180) _scrollToBottom();
       }
     });
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: AppTheme.surface,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            chat.loadRooms();
-            Navigator.of(context).pop();
-          },
-        ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppTheme.primary,
-              backgroundImage: widget.otherAvatarUrl != null
-                  ? CachedNetworkImageProvider(widget.otherAvatarUrl!)
-                  : null,
-              child: widget.otherAvatarUrl == null
-                  ? Text(
-                      widget.otherUserName[0].toUpperCase(),
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              widget.otherUserName,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          // Messages
-          Expanded(
-            child: messages.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Напишите первое сообщение',
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[index];
-                      final sender = msg['sender'];
-                      final senderId = sender is Map
-                          ? sender['id'] as int?
-                          : null;
-                      final isMe = senderId == auth.userId;
-                      return _MessageBubble(
-                        text: msg['text'] as String? ?? '',
-                        isMe: isMe,
-                        time: _formatTime(msg['created_at'] as String?),
-                      );
-                    },
-                  ),
+          Positioned(
+            top: -50,
+            right: -30,
+            child: _Blob(color: AppTheme.accent, size: 160),
           ),
-          // Input
-          Container(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 8,
-              top: 8,
-              bottom: MediaQuery.of(context).padding.bottom + 8,
-            ),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(
-                top: BorderSide(color: AppTheme.border, width: 0.5),
-              ),
-            ),
-            child: Row(
+          SafeArea(
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Сообщение...',
-                      filled: true,
-                      fillColor: AppTheme.inputFill,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+                // ── App bar ─────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          chat.loadRooms();
+                          Navigator.of(context).pop();
+                        },
+                        child: LiquidGlass(
+                          borderRadius: BorderRadius.circular(12),
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 18, color: AppTheme.textPrimary),
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
+                      const SizedBox(width: 12),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppTheme.primary,
+                        backgroundImage: widget.otherAvatarUrl != null
+                            ? CachedNetworkImageProvider(
+                                widget.otherAvatarUrl!)
+                            : null,
+                        child: widget.otherAvatarUrl == null
+                            ? Text(widget.otherUserName[0].toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold))
+                            : null,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        widget.otherUserName,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // ── Messages ───────────────────────────────────────
+                Expanded(
+                  child: messages.isEmpty
+                      ? const Center(
+                          child: Text('Напишите первое сообщение',
+                              style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 14)),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          itemCount: messages.length,
+                          itemBuilder: (_, i) {
+                            final msg = messages[i];
+                            final sender = msg['sender'];
+                            final senderId = sender is Map
+                                ? sender['id'] as int?
+                                : null;
+                            final isMe = senderId == auth.userId;
+                            return _Bubble(
+                              text: msg['text'] as String? ?? '',
+                              isMe: isMe,
+                              time: _fmt(msg['created_at'] as String?),
+                            );
+                          },
+                        ),
+                ),
+
+                // ── Glass input bar ────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                  child: SafeArea(
+                    top: false,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.07),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _messageController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Сообщение...',
+                                    filled: true,
+                                    fillColor: Colors.transparent,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 10),
+                                    hintStyle: TextStyle(
+                                        color: AppTheme.textSecondary
+                                            .withValues(alpha: 0.6)),
+                                  ),
+                                  style: const TextStyle(
+                                      color: AppTheme.textPrimary,
+                                      fontSize: 15),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  onSubmitted: (_) => _send(),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _send,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.primaryGradient,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.primary
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.send_rounded,
+                                      color: Colors.white, size: 18),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    textCapitalization: TextCapitalization.sentences,
-                    onSubmitted: (_) => _send(),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                    onPressed: _send,
-                  ),
-                ),
+
+                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -202,27 +253,23 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  String _formatTime(String? isoTime) {
-    if (isoTime == null) return '';
+  String _fmt(String? iso) {
+    if (iso == null) return '';
     try {
-      final dt = DateTime.parse(isoTime).toLocal();
+      final dt = DateTime.parse(iso).toLocal();
       return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
+    } catch (_) {
       return '';
     }
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class _Bubble extends StatelessWidget {
   final String text;
   final bool isMe;
   final String time;
-
-  const _MessageBubble({
-    required this.text,
-    required this.isMe,
-    required this.time,
-  });
+  const _Bubble(
+      {required this.text, required this.isMe, required this.time});
 
   @override
   Widget build(BuildContext context) {
@@ -230,25 +277,32 @@ class _MessageBubble extends StatelessWidget {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isMe ? AppTheme.primary : AppTheme.surfaceLight,
+          gradient: isMe ? AppTheme.primaryGradient : null,
+          color: isMe ? null : AppTheme.surfaceLight,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
+            topLeft: const Radius.circular(18),
+            topRight: const Radius.circular(18),
+            bottomLeft: Radius.circular(isMe ? 18 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 18),
           ),
+          border: isMe
+              ? null
+              : Border.all(
+                  color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
               text,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color:
+                    isMe ? Colors.white : AppTheme.textPrimary,
                 fontSize: 15,
               ),
             ),
@@ -256,12 +310,32 @@ class _MessageBubble extends StatelessWidget {
             Text(
               time,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: isMe
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : AppTheme.textSecondary,
                 fontSize: 11,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _Blob({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.18),
       ),
     );
   }

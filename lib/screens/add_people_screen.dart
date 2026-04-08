@@ -6,6 +6,7 @@ import '../providers/bill_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/liquid_glass.dart';
 import 'split_screen.dart';
 
 class AddPeopleScreen extends StatefulWidget {
@@ -15,18 +16,32 @@ class AddPeopleScreen extends StatefulWidget {
   State<AddPeopleScreen> createState() => _AddPeopleScreenState();
 }
 
-class _AddPeopleScreenState extends State<AddPeopleScreen> {
+class _AddPeopleScreenState extends State<AddPeopleScreen>
+    with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _focusNode = FocusNode();
+  final _billNameController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
   Timer? _debounce;
+  late AnimationController _addController;
+
+  @override
+  void initState() {
+    super.initState();
+    _addController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _focusNode.dispose();
+    _billNameController.dispose();
     _debounce?.cancel();
+    _addController.dispose();
     super.dispose();
   }
 
@@ -39,11 +54,9 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
       });
       return;
     }
-
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       final auth = context.read<AuthProvider>();
       if (auth.isGuest) return;
-
       setState(() => _isSearching = true);
       try {
         final results = await auth.api.searchUsers(query.trim());
@@ -65,6 +78,24 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
     context.read<BillProvider>().addPerson(name);
     _nameController.clear();
     setState(() => _searchResults = []);
+    _addController.forward(from: 0);
+  }
+
+  void _addFromSearch(Map<String, dynamic> user) {
+    final provider = context.read<BillProvider>();
+    if (provider.people.any((p) => p.userId == user['id'])) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Участник уже добавлен')),
+      );
+      return;
+    }
+    provider.addPerson(
+      user['name'] as String,
+      userId: user['id'] as int,
+      avatarUrl: user['avatar'] as String?,
+    );
+    _nameController.clear();
+    setState(() => _searchResults = []);
   }
 
   void _showGroupPickerDialog() {
@@ -73,42 +104,38 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      isScrollControlled: true,
       builder: (ctx) {
         return Consumer<GroupProvider>(
           builder: (ctx, gp, _) {
             if (gp.isLoading) {
               return const SizedBox(
                 height: 200,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
-                ),
+                child:
+                    Center(child: CircularProgressIndicator(color: AppTheme.primary)),
               );
             }
             if (gp.groups.isEmpty) {
-              return SizedBox(
-                height: 200,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.group_off,
-                          color: AppTheme.textSecondary, size: 40),
-                      const SizedBox(height: 12),
-                      const Text('Нет групп',
-                          style: TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Создайте группу в разделе Профиль',
+              return Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('👥', style: TextStyle(fontSize: 40)),
+                    const SizedBox(height: 12),
+                    const Text('Нет групп',
                         style: TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 13),
-                      ),
-                    ],
-                  ),
+                            color: AppTheme.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Создайте группу в разделе Профиль',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: AppTheme.textSecondary, fontSize: 13),
+                    ),
+                  ],
                 ),
               );
             }
@@ -120,10 +147,10 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40,
+                      width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppTheme.border,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -139,34 +166,17 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
                   ),
                   const SizedBox(height: 12),
                   ...gp.groups.map((group) {
-                    final members = List<Map<String, dynamic>>.from(
-                        group['members'] ?? []);
+                    final members =
+                        List<Map<String, dynamic>>.from(group['members'] ?? []);
                     final name = group['name']?.toString() ?? '';
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.group,
-                            color: AppTheme.accent, size: 20),
-                      ),
-                      title: Text(name,
-                          style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.w500)),
-                      subtitle: Text('${members.length} участников',
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 12)),
+                    return _GroupListTile(
+                      name: name,
+                      memberCount: members.length,
                       onTap: () {
                         final billProvider = context.read<BillProvider>();
                         for (final member in members) {
-                          final alreadyAdded = billProvider.people
-                              .any((p) => p.userId == member['id']);
-                          if (!alreadyAdded) {
+                          if (!billProvider.people
+                              .any((p) => p.userId == member['id'])) {
                             billProvider.addPerson(
                               member['name'] as String? ?? '',
                               userId: member['id'] as int?,
@@ -176,9 +186,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
                         }
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Добавлено из "$name"')),
+                          SnackBar(content: Text('Добавлено из "$name"')),
                         );
                       },
                     );
@@ -193,293 +201,478 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
     );
   }
 
-  void _addFromSearch(Map<String, dynamic> user) {
-    final provider = context.read<BillProvider>();
-    // Don't add the same user twice
-    final alreadyAdded = provider.people.any((p) => p.userId == user['id']);
-    if (alreadyAdded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Участник уже добавлен')),
-      );
-      return;
-    }
-    provider.addPerson(
-      user['name'] as String,
-      userId: user['id'] as int,
-      avatarUrl: user['avatar'] as String?,
-    );
-    _nameController.clear();
-    setState(() => _searchResults = []);
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<BillProvider>();
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
+      backgroundColor: AppTheme.background,
+      body: Stack(
+        children: [
+          // Ambient blobs
+          Positioned(
+            top: -50,
+            right: -30,
+            child: _Blob(color: AppTheme.primary, size: 180),
+          ),
+          Positioned(
+            bottom: 100,
+            left: -40,
+            child: _Blob(color: AppTheme.accent, size: 140),
+          ),
 
-              // Title
-              Text(
-                'Fair Splitter',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.accent,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Добавьте участников',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Name input + add button
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _nameController,
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: auth.isGuest
-                            ? 'Имя участника'
-                            : 'Имя или поиск по email',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        suffixIcon: _isSearching
-                            ? const Padding(
-                                padding: EdgeInsets.all(14),
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                              )
-                            : null,
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                      onChanged: _onSearchChanged,
-                      onSubmitted: (_) => _addPerson(),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: _addPerson,
-                      style: FilledButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        backgroundColor: AppTheme.primary,
-                        shape: RoundedRectangleBorder(
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Header ────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: LiquidGlass(
                           borderRadius: BorderRadius.circular(12),
+                          padding: const EdgeInsets.all(10),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 18, color: AppTheme.textPrimary),
                         ),
                       ),
-                      child: const Icon(Icons.add, size: 28),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      auth.isGuest
-                          ? 'Добавьте минимум 2 участников'
-                          : 'Введите имя или найдите пользователя',
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  if (!auth.isGuest)
-                    TextButton.icon(
-                      onPressed: () => _showGroupPickerDialog(),
-                      icon: const Icon(Icons.group, size: 16),
-                      label: const Text('Из группы', style: TextStyle(fontSize: 13)),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.accent,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                    ),
-                ],
-              ),
-
-              // Search results dropdown
-              if (_searchResults.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.border),
-                  ),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: _searchResults.length,
-                    itemBuilder: (context, index) {
-                      final user = _searchResults[index];
-                      final avatarUrl = user['avatar'] as String?;
-                      final name = user['name'] as String;
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary,
-                          backgroundImage: avatarUrl != null
-                              ? CachedNetworkImageProvider(avatarUrl)
-                              : null,
-                          child: avatarUrl == null
-                              ? Text(
-                                  name[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        title: Text(name,
-                            style:
-                                const TextStyle(color: AppTheme.textPrimary)),
-                        subtitle: Text(
-                          user['email'] as String? ?? '',
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Text(
+                          'Новый счёт',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: -0.4,
                           ),
                         ),
-                        trailing: const Icon(Icons.person_add_outlined,
-                            color: AppTheme.accent, size: 20),
-                        onTap: () => _addFromSearch(user),
-                      );
-                    },
+                      ),
+                      if (!auth.isGuest)
+                        GestureDetector(
+                          onTap: _showGroupPickerDialog,
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(12),
+                            interactive: true,
+                            onTap: _showGroupPickerDialog,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.group_rounded,
+                                    size: 16, color: AppTheme.accent),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Из группы',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              const SizedBox(height: 16),
 
-              // People list
-              Expanded(
-                child: provider.people.isEmpty
-                    ? const SizedBox()
-                    : ListView.builder(
-                        itemCount: provider.people.length,
-                        itemBuilder: (context, index) {
-                          final person = provider.people[index];
-                          final isRegistered = person.userId != null;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppTheme.border),
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: person.avatarColor,
-                                backgroundImage: person.avatarUrl != null
-                                    ? CachedNetworkImageProvider(
-                                        person.avatarUrl!)
-                                    : null,
-                                child: person.avatarUrl == null
-                                    ? Text(
-                                        person.name[0].toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              title: Row(
-                                children: [
-                                  Text(
-                                    person.name,
-                                    style: const TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontWeight: FontWeight.w500,
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    auth.isGuest
+                        ? 'Добавьте минимум 2 участников'
+                        : 'Введите имя или найдите пользователя',
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 13),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ── Search input ──────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _nameController,
+                          focusNode: _focusNode,
+                          decoration: InputDecoration(
+                            hintText: auth.isGuest
+                                ? 'Имя участника'
+                                : 'Имя или email',
+                            prefixIcon:
+                                const Icon(Icons.person_search_rounded),
+                            suffixIcon: _isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(14),
+                                    child: SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                  if (isRegistered) ...[
-                                    const SizedBox(width: 6),
-                                    const Icon(Icons.verified,
-                                        color: AppTheme.accent, size: 16),
-                                  ],
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(Icons.close,
-                                    color: AppTheme.textSecondary, size: 20),
-                                onPressed: () =>
-                                    provider.removePerson(person.id),
-                              ),
-                            ),
-                          );
-                        },
+                                  )
+                                : null,
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                          onChanged: _onSearchChanged,
+                          onSubmitted: (_) => _addPerson(),
+                        ),
                       ),
-              ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: _addPerson,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.add_rounded,
+                              color: Colors.white, size: 26),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-              // Next button
-              Padding(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: provider.people.length < 2
-                        ? null
-                        : () {
-                            provider.reset(keepPeople: true);
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SplitScreen(),
+                // ── Search results dropdown ───────────────────────
+                if (_searchResults.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: LiquidGlass(
+                      borderRadius: BorderRadius.circular(16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 220),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: _searchResults.length,
+                          itemBuilder: (_, i) {
+                            final user = _searchResults[i];
+                            final avatarUrl = user['avatar'] as String?;
+                            final name = user['name'] as String;
+                            return ListTile(
+                              leading: _Avatar(
+                                  name: name, avatarUrl: avatarUrl, radius: 18),
+                              title: Text(name,
+                                  style: const TextStyle(
+                                      color: AppTheme.textPrimary,
+                                      fontSize: 14)),
+                              subtitle: Text(
+                                user['email'] as String? ?? '',
+                                style: const TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 12),
+                              ),
+                              trailing: const Icon(Icons.person_add_outlined,
+                                  color: AppTheme.accent, size: 20),
+                              onTap: () => _addFromSearch(user),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
+
+                // ── Added participants list ───────────────────────
+                Expanded(
+                  child: provider.people.isEmpty
+                      ? _EmptyParticipants()
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: provider.people.length,
+                          itemBuilder: (_, i) {
+                            final person = provider.people[i];
+                            return TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0, end: 1),
+                              duration:
+                                  const Duration(milliseconds: 300),
+                              curve: Curves.easeOutBack,
+                              builder: (_, v, child) => Transform.scale(
+                                scale: v,
+                                child: Opacity(opacity: v, child: child),
+                              ),
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white
+                                        .withValues(alpha: 0.06),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primary
+                                          .withValues(alpha: 0.06),
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                ),
+                                child: ListTile(
+                                  leading: _Avatar(
+                                    name: person.name,
+                                    avatarUrl: person.avatarUrl,
+                                    radius: 20,
+                                    bgColor: person.avatarColor,
+                                  ),
+                                  title: Row(
+                                    children: [
+                                      Text(
+                                        person.name,
+                                        style: const TextStyle(
+                                          color: AppTheme.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (person.userId != null) ...[
+                                        const SizedBox(width: 6),
+                                        const Icon(Icons.verified_rounded,
+                                            color: AppTheme.accent,
+                                            size: 15),
+                                      ],
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.close_rounded,
+                                        color: AppTheme.textSecondary
+                                            .withValues(alpha: 0.6),
+                                        size: 20),
+                                    onPressed: () =>
+                                        provider.removePerson(person.id),
+                                  ),
+                                ),
                               ),
                             );
                           },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      disabledBackgroundColor:
-                          AppTheme.primary.withValues(alpha: 0.3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Далее',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
                         ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward, size: 20),
-                      ],
+                ),
+
+                // ── Next button ───────────────────────────────────
+                Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: _canProceed(provider)
+                          ? DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primary
+                                        .withValues(alpha: 0.4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: FilledButton(
+                                onPressed: () {
+                                  provider.reset(keepPeople: true);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const SplitScreen(),
+                                    ),
+                                  );
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Text('Далее',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        )),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward_rounded,
+                                        size: 20),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : FilledButton(
+                              onPressed: null,
+                              style: FilledButton.styleFrom(
+                                disabledBackgroundColor:
+                                    AppTheme.primary.withValues(alpha: 0.2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                children: [
+                                  Text('Далее',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textSecondary,
+                                      )),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward_rounded,
+                                      size: 20,
+                                      color: AppTheme.textSecondary),
+                                ],
+                              ),
+                            ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  bool _canProceed(BillProvider provider) => provider.people.length >= 2;
+}
+
+// ── Sub-widgets ──────────────────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
+  final double radius;
+  final Color? bgColor;
+
+  const _Avatar({
+    required this.name,
+    this.avatarUrl,
+    required this.radius,
+    this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: bgColor ?? AppTheme.primary,
+      backgroundImage:
+          avatarUrl != null ? CachedNetworkImageProvider(avatarUrl!) : null,
+      child: avatarUrl == null
+          ? Text(
+              name.isNotEmpty ? name[0].toUpperCase() : '?',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: radius * 0.8,
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+class _GroupListTile extends StatelessWidget {
+  final String name;
+  final int memberCount;
+  final VoidCallback onTap;
+
+  const _GroupListTile(
+      {required this.name,
+      required this.memberCount,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppTheme.accent.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
         ),
+        child:
+            const Icon(Icons.group_rounded, color: AppTheme.accent, size: 20),
+      ),
+      title: Text(name,
+          style: const TextStyle(
+              color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
+      subtitle: Text('$memberCount участников',
+          style:
+              const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+      onTap: onTap,
+    );
+  }
+}
+
+class _EmptyParticipants extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('👤', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 12),
+          const Text(
+            'Добавьте участников',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _Blob({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.20),
       ),
     );
   }

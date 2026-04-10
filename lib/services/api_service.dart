@@ -5,9 +5,15 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const _timeout = Duration(seconds: 10);
 
+  // Set to true when running on a real device with "adb reverse tcp:8000 tcp:8000".
+  // Set to false when running on the Android emulator.
+  static const _useRealDevice = false;
+
   static String get _baseUrl {
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8000/api';
+      return _useRealDevice
+          ? 'http://localhost:8000/api'
+          : 'http://10.0.2.2:8000/api';
     }
     return 'http://localhost:8000/api';
   }

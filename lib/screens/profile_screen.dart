@@ -233,8 +233,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
-                            const Text('👤',
-                                style: TextStyle(fontSize: 36)),
+                            const Icon(Icons.person_rounded,
+                                size: 36, color: AppTheme.primary),
                             const SizedBox(height: 10),
                             const Text(
                               'Вы вошли как гость',

@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '$greeting, $userName 👋',
+                                        '$greeting, $userName',
                                         style: AppTheme.headingStyle(fontSize: 26),
                                       ),
                                       const SizedBox(height: 2),
@@ -132,7 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: _QuickActionCard(
                                 icon: Icons.receipt_long_rounded,
                                 label: 'Новый счёт',
-                                emoji: '🧾',
                                 gradient: AppTheme.primaryGradient,
                                 onTap: _openNewBill,
                               ),
@@ -142,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: _QuickActionCard(
                                 icon: Icons.camera_alt_rounded,
                                 label: 'Сканировать чек',
-                                emoji: '📸',
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFFF8F5E), Color(0xFFFFBE76)],
                                 ),
@@ -260,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
-                    const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 160)),
                   ],
                 ),
               ),
@@ -290,14 +288,12 @@ class _HomeScreenState extends State<HomeScreen> {
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String emoji;
   final Gradient gradient;
   final VoidCallback onTap;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
-    required this.emoji,
     required this.gradient,
     required this.onTap,
   });
@@ -327,7 +323,7 @@ class _QuickActionCard extends StatelessWidget {
               ],
             ),
             child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+              child: Icon(icon, size: 22, color: const Color(0xFF1A1A1A)),
             ),
           ),
           const SizedBox(height: 12),
@@ -398,8 +394,8 @@ class _BillCard extends StatelessWidget {
                 color: AppTheme.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Center(
-                child: Text('🍽️', style: TextStyle(fontSize: 20)),
+              child: Center(
+                child: Icon(Icons.restaurant_rounded, size: 20, color: AppTheme.primary),
               ),
             ),
             const SizedBox(width: 12),
@@ -478,14 +474,14 @@ class _EmptyBillsState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
       child: LiquidGlass(
         borderRadius: BorderRadius.circular(24),
-        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
         child: Column(
           children: [
-            const Text('🍽️', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 12),
+            const Icon(Icons.restaurant_rounded, size: 44, color: AppTheme.primary),
+            const SizedBox(height: 10),
             Text('Пока тут пусто', style: AppTheme.headingStyle(fontSize: 17)),
             const SizedBox(height: 6),
             const Text(
@@ -493,22 +489,36 @@ class _EmptyBillsState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             SizedBox(
-              height: 44,
+              width: double.infinity,
+              height: 48,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: AppTheme.primaryGradient,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: FilledButton.icon(
                   onPressed: onCreateBill,
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('Создать счёт'),
+                  icon: const Icon(Icons.add_rounded, size: 20, color: Color(0xFF1A1A1A)),
+                  label: const Text('Создать счёт',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                      )),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    foregroundColor: const Color(0xFF1A1A1A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
@@ -533,7 +543,7 @@ class _GuestBillsPlaceholder extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            const Text('🧾', style: TextStyle(fontSize: 32)),
+            Icon(Icons.receipt_long_rounded, size: 32, color: AppTheme.primary),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

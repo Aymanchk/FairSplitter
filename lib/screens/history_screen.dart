@@ -544,7 +544,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\u{1F37D}\u{FE0F}', style: TextStyle(fontSize: 52)),
+          const Icon(Icons.restaurant_rounded, size: 52, color: AppTheme.primary),
           const SizedBox(height: 14),
           Text('Счетов пока нет',
               style: AppTheme.headingStyle(fontSize: 17)),
@@ -567,7 +567,7 @@ class _GuestPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('\u{1F512}', style: TextStyle(fontSize: 48)),
+            const Icon(Icons.lock_rounded, size: 48, color: AppTheme.primary),
             const SizedBox(height: 14),
             Text(
               'Войдите в аккаунт',

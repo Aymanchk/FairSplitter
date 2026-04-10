@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -65,9 +66,36 @@ class _DebtsScreenState extends State<DebtsScreen>
                   // ── Header ──────────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: Text(
-                      'Долги',
-                      style: AppTheme.headingStyle(),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Долги',
+                            style: AppTheme.headingStyle(),
+                          ),
+                        ),
+                        if (!auth.isGuest)
+                          GestureDetector(
+                            onTap: _showCreateDebtDialog,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primary.withValues(alpha: 0.4),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.add_rounded,
+                                  color: Color(0xFF1A1A1A), size: 22),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
 
@@ -213,6 +241,159 @@ class _DebtsScreenState extends State<DebtsScreen>
                   ],
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCreateDebtDialog() {
+    final amountCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final auth = context.read<AuthProvider>();
+    List<Map<String, dynamic>> searchResults = [];
+    Map<String, dynamic>? selectedUser;
+    bool searching = false;
+    final searchCtrl = TextEditingController();
+    Timer? debounce;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Создать долг'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Поиск пользователя',
+                    prefixIcon: const Icon(Icons.person_search_rounded),
+                    suffixIcon: searching
+                        ? const Padding(
+                            padding: EdgeInsets.all(14),
+                            child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : null,
+                  ),
+                  onChanged: (q) {
+                    debounce?.cancel();
+                    if (q.trim().length < 2) {
+                      setDialogState(() => searchResults = []);
+                      return;
+                    }
+                    debounce = Timer(const Duration(milliseconds: 300), () async {
+                      setDialogState(() => searching = true);
+                      try {
+                        final res = await auth.api.searchUsers(q.trim());
+                        setDialogState(() {
+                          searchResults = res;
+                          searching = false;
+                        });
+                      } catch (_) {
+                        setDialogState(() => searching = false);
+                      }
+                    });
+                  },
+                ),
+                if (selectedUser != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Chip(
+                      label: Text(selectedUser!['name'] as String),
+                      onDeleted: () => setDialogState(() => selectedUser = null),
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+                    ),
+                  ),
+                if (searchResults.isNotEmpty && selectedUser == null)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 150),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: searchResults.length,
+                      itemBuilder: (_, i) {
+                        final user = searchResults[i];
+                        return ListTile(
+                          dense: true,
+                          title: Text(user['name'] as String,
+                              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14)),
+                          subtitle: Text(user['email'] as String? ?? '',
+                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          onTap: () {
+                            setDialogState(() {
+                              selectedUser = user;
+                              searchResults = [];
+                              searchCtrl.text = user['name'] as String;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Сумма (сом)',
+                    prefixIcon: Icon(Icons.payments_rounded),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Описание (необязательно)',
+                    prefixIcon: Icon(Icons.note_rounded),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final amount = double.tryParse(amountCtrl.text.replaceAll(',', '.'));
+                if (selectedUser == null || amount == null || amount <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Выберите пользователя и укажите сумму')),
+                  );
+                  return;
+                }
+                if (auth.userId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Ошибка: пользователь не авторизован')),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx);
+                final dp = context.read<DebtProvider>();
+                final success = await dp.createDebt(
+                  fromUserId: auth.userId!,
+                  toUserId: selectedUser!['id'] as int,
+                  amount: amount,
+                  description: descCtrl.text.trim(),
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success ? 'Долг создан' : 'Не удалось создать долг'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Создать'),
             ),
           ],
         ),
@@ -507,7 +688,7 @@ class _EmptyDebts extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: const [
-          Text('💰', style: TextStyle(fontSize: 52)),
+          Icon(Icons.account_balance_wallet_rounded, size: 52, color: AppTheme.primary),
           SizedBox(height: 14),
           Text('Долгов нет',
               style: TextStyle(
@@ -532,7 +713,7 @@ class _GuestPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            Text('🔐', style: TextStyle(fontSize: 48)),
+            Icon(Icons.lock_rounded, size: 48, color: AppTheme.primary),
             SizedBox(height: 14),
             Text('Войдите в аккаунт',
                 style: TextStyle(

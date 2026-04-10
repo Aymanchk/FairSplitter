@@ -19,6 +19,7 @@ class _SummaryScreenState extends State<SummaryScreen>
   late AnimationController _totalCountController;
   late Animation<double> _totalCountAnim;
   bool _saved = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -38,18 +39,22 @@ class _SummaryScreenState extends State<SummaryScreen>
       CurvedAnimation(parent: _totalCountController, curve: Curves.easeOut),
     );
     _totalCountController.forward();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _trySaveBill();
-    });
   }
 
-  Future<void> _trySaveBill() async {
-    if (_saved) return;
-    _saved = true;
+  Future<void> _saveBill() async {
+    if (_saved || _saving) return;
+    setState(() => _saving = true);
     final provider = context.read<BillProvider>();
     final auth = context.read<AuthProvider>();
-    if (auth.isGuest || !auth.isLoggedIn) return;
+    if (auth.isGuest || !auth.isLoggedIn) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Войдите в аккаунт, чтобы сохранять счета')),
+        );
+      }
+      return;
+    }
     try {
       await auth.api.saveBill(
         total: provider.total,
@@ -58,7 +63,23 @@ class _SummaryScreenState extends State<SummaryScreen>
         people: provider.people.map((p) => {'name': p.name, 'id': p.id}).toList(),
         assignments: provider.assignments.map((k, v) => MapEntry(k, v.toList())),
       );
-    } catch (_) {}
+      if (mounted) {
+        setState(() {
+          _saved = true;
+          _saving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Счёт сохранён в историю')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось сохранить')),
+        );
+      }
+    }
   }
 
   @override
@@ -148,8 +169,8 @@ class _SummaryScreenState extends State<SummaryScreen>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: const [
-                                    Text('🎉',
-                                        style: TextStyle(fontSize: 18)),
+                                    Icon(Icons.celebration_rounded,
+                                        size: 18, color: AppTheme.success),
                                     SizedBox(width: 8),
                                     Text(
                                       'Счёт разделён!',
@@ -248,6 +269,68 @@ class _SummaryScreenState extends State<SummaryScreen>
                             );
                           }),
 
+                          // ── Save button ─────────────────────────────
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: _saved
+                                ? LiquidGlass(
+                                    borderRadius: BorderRadius.circular(16),
+                                    padding: EdgeInsets.zero,
+                                    child: const Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.check_circle_rounded,
+                                              size: 18, color: AppTheme.success),
+                                          SizedBox(width: 8),
+                                          Text('Сохранено в историю',
+                                              style: TextStyle(
+                                                  color: AppTheme.success,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 15)),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.surface,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppTheme.primary.withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                    child: FilledButton.icon(
+                                      onPressed: _saving ? null : _saveBill,
+                                      icon: _saving
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppTheme.primary,
+                                              ),
+                                            )
+                                          : const Icon(Icons.save_rounded,
+                                              size: 18, color: AppTheme.primary),
+                                      label: Text(
+                                        _saving ? 'Сохраняем...' : 'Сохранить в историю',
+                                        style: const TextStyle(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          ),
                           const SizedBox(height: 16),
                         ],
                       ),

@@ -121,7 +121,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('👥', style: TextStyle(fontSize: 40)),
+                    const Icon(Icons.group_rounded, size: 40, color: AppTheme.primary),
                     const SizedBox(height: 12),
                     const Text('Нет групп',
                         style: TextStyle(
@@ -648,7 +648,7 @@ class _EmptyParticipants extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('\u{1F465}', style: TextStyle(fontSize: 48)),
+          const Icon(Icons.group_rounded, size: 48, color: AppTheme.primary),
           const SizedBox(height: 12),
           const Text(
             'Добавьте участников',

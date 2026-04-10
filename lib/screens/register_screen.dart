@@ -108,8 +108,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                           animation: _floatAnim,
                           builder: (_, __) => Transform.translate(
                             offset: Offset(0, _floatAnim.value),
-                            child: const Text('🎉',
-                                style: TextStyle(fontSize: 52)),
+                            child: const Icon(Icons.celebration_rounded,
+                                size: 52, color: AppTheme.primary),
                           ),
                         ),
                         const SizedBox(height: 14),

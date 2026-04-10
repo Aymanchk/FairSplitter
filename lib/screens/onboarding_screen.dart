@@ -24,17 +24,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   static const _slides = [
     _SlideData(
-      emoji: '🍽️',
+      icon: Icons.restaurant_rounded,
       title: 'Дели счёт, а не дружбу',
       subtitle: 'Разделяйте расходы за ужин честно и без споров',
     ),
     _SlideData(
-      emoji: '📸',
+      icon: Icons.camera_alt_rounded,
       title: 'Сфоткай чек — мы разберёмся',
       subtitle: 'Сканируйте чек камерой, и мы распознаем все позиции',
     ),
     _SlideData(
-      emoji: '💸',
+      icon: Icons.payments_rounded,
       title: 'Каждый платит за своё',
       subtitle: 'Отслеживайте долги и отправляйте напоминания друзьям',
     ),
@@ -146,8 +146,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                         ),
                                       ),
                                       child: Center(
-                                        child: Text(slide.emoji,
-                                            style: const TextStyle(fontSize: 72)),
+                                        child: Icon(slide.icon,
+                                            size: 72, color: AppTheme.primary),
                                       ),
                                     ),
                                   ),
@@ -203,11 +203,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _FeaturePill('📸 Скан чека'),
+                          _FeaturePill(Icons.camera_alt_rounded, 'Скан чека'),
                           const SizedBox(width: 8),
-                          _FeaturePill('💰 Долги'),
+                          _FeaturePill(Icons.account_balance_wallet_rounded, 'Долги'),
                           const SizedBox(width: 8),
-                          _FeaturePill('💬 Чат'),
+                          _FeaturePill(Icons.chat_bubble_rounded, 'Чат'),
                         ],
                       ),
                     ),
@@ -319,32 +319,40 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 }
 
 class _SlideData {
-  final String emoji;
+  final IconData icon;
   final String title;
   final String subtitle;
   const _SlideData({
-    required this.emoji,
+    required this.icon,
     required this.title,
     required this.subtitle,
   });
 }
 
 class _FeaturePill extends StatelessWidget {
+  final IconData icon;
   final String label;
-  const _FeaturePill(this.label);
+  const _FeaturePill(this.icon, this.label);
 
   @override
   Widget build(BuildContext context) {
     return LiquidGlass(
       borderRadius: BorderRadius.circular(50),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppTheme.textPrimary,
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppTheme.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

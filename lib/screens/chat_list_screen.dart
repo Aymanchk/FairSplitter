@@ -336,7 +336,7 @@ class _GuestPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('💬', style: TextStyle(fontSize: 52)),
+          Icon(Icons.chat_bubble_rounded, size: 52, color: AppTheme.primary),
           SizedBox(height: 14),
           Text('Войдите в аккаунт',
               style: TextStyle(
@@ -359,7 +359,7 @@ class _EmptyPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('🗨️', style: TextStyle(fontSize: 52)),
+          Icon(Icons.forum_rounded, size: 52, color: AppTheme.primary),
           SizedBox(height: 14),
           Text('Пока нет чатов',
               style: TextStyle(
@@ -367,7 +367,7 @@ class _EmptyPlaceholder extends StatelessWidget {
                   fontSize: 17,
                   fontWeight: FontWeight.bold)),
           SizedBox(height: 6),
-          Text('Нажмите ✏️ чтобы начать',
+          Text('Нажмите кнопку чтобы начать',
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         ],
       ),

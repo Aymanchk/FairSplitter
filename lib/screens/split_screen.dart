@@ -763,7 +763,7 @@ class _BottomBar extends StatelessWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Итоги',
+                        Text('Разделить счёт',
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -787,7 +787,7 @@ class _BottomBar extends StatelessWidget {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Итоги',
+                      Text('Разделить счёт',
                           style: TextStyle(
                               fontSize: 16,
                               color: AppTheme.textSecondary,
@@ -848,7 +848,7 @@ class _EmptyItemsState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: const Column(
         children: [
-          Text('🍽️', style: TextStyle(fontSize: 40)),
+          Icon(Icons.restaurant_rounded, size: 40, color: AppTheme.primary),
           SizedBox(height: 12),
           Text(
             'Пока тут пусто. Время ужинать?\nДобавьте блюда или сканируйте чек',

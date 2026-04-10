@@ -5,7 +5,7 @@ import '../providers/bill_provider.dart';
 class ShareHelper {
   static String generateReport(BillProvider provider) {
     final buf = StringBuffer();
-    buf.writeln('🧾 Итоги посиделки:');
+    buf.writeln('Итоги посиделки:');
     buf.writeln('');
 
     for (final person in provider.people) {
@@ -13,16 +13,16 @@ class ShareHelper {
       final items = provider.getPersonItems(person.id);
       final itemNames = items.map((i) => i.name).join(', ');
       buf.writeln(
-        '👤 ${person.name}: ${total.toStringAsFixed(0)} сом'
+        '${person.name}: ${total.toStringAsFixed(0)} сом'
         '${itemNames.isNotEmpty ? ' ($itemNames)' : ''}',
       );
     }
 
     buf.writeln('');
-    buf.writeln('💰 Общий счёт: ${provider.total.toStringAsFixed(0)} сом');
+    buf.writeln('Общий счёт: ${provider.total.toStringAsFixed(0)} сом');
     if (provider.serviceChargeEnabled) {
       buf.writeln(
-        '📋 Обслуживание: ${provider.serviceChargePercent.toStringAsFixed(0)}%'
+        'Обслуживание: ${provider.serviceChargePercent.toStringAsFixed(0)}%'
         ' (${provider.serviceChargeAmount.toStringAsFixed(0)} сом)',
       );
     }

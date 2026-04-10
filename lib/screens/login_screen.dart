@@ -107,8 +107,8 @@ class _LoginScreenState extends State<LoginScreen>
                           animation: _floatAnim,
                           builder: (_, __) => Transform.translate(
                             offset: Offset(0, _floatAnim.value),
-                            child: const Text('🍴',
-                                style: TextStyle(fontSize: 56)),
+                            child: const Icon(Icons.restaurant_rounded,
+                                size: 56, color: AppTheme.primary),
                           ),
                         ),
                         const SizedBox(height: 16),

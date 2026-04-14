@@ -74,21 +74,21 @@ class _LoginScreenState extends State<LoginScreen>
         decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: Stack(
           children: [
-            // Warm ambient blobs
+            // Cool ambient blobs
             Positioned(
               top: -60,
               right: -40,
-              child: _Blob(color: const Color(0xFFF5A623), size: 200),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 200),
             ),
             Positioned(
               bottom: -40,
               left: -60,
-              child: _Blob(color: const Color(0xFFFFD166), size: 180),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 180),
             ),
             Positioned(
               top: MediaQuery.of(context).size.height * 0.4,
               right: -30,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 120),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 120),
             ),
 
             SafeArea(
@@ -107,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen>
                           animation: _floatAnim,
                           builder: (_, __) => Transform.translate(
                             offset: Offset(0, _floatAnim.value),
-                            child: const Icon(Icons.restaurant_rounded,
+                            child: const Icon(Icons.account_balance_wallet_rounded,
                                 size: 56, color: AppTheme.primary),
                           ),
                         ),

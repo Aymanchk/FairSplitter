@@ -131,6 +131,10 @@ class ApiService {
     required List<Map<String, dynamic>> items,
     required List<Map<String, dynamic>> people,
     required Map<String, List<String>> assignments,
+    String? title,
+    String? category,
+    String? currency,
+    String? splitMode,
   }) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/bills/'),
@@ -141,6 +145,10 @@ class ApiService {
         'items': items,
         'people': people,
         'assignments': assignments,
+        if (title != null && title.isNotEmpty) 'title': title,
+        if (category != null) 'category': category,
+        if (currency != null) 'currency': currency,
+        if (splitMode != null) 'split_mode': splitMode,
       }),
     );
     return _handleResponse(response);

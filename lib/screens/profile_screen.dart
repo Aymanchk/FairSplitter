@@ -110,17 +110,17 @@ class _ProfileScreenState extends State<ProfileScreen>
             Positioned(
               top: -40,
               left: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 200),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 200),
             ),
             Positioned(
               bottom: 100,
               right: -50,
-              child: _Blob(color: const Color(0xFFFFD166), size: 150),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 150),
             ),
             Positioned(
               top: 60,
               right: 30,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 100),
             ),
             SafeArea(
               child: SingleChildScrollView(
@@ -674,7 +674,7 @@ class _GradientRingPainter extends CustomPainter {
         colors: const [
           AppTheme.primary,
           AppTheme.primaryLight,
-          Color(0xFFFF8F5E),
+          Color(0xFFA78BFA),
           AppTheme.primary,
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));

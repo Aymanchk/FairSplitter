@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ── Core palette — Premium Dark with warm accents ──────────────────────────
-  static const Color background = Color(0xFF0F1B2D);       // deep dark blue
-  static const Color backgroundLight = Color(0xFF1A2744);   // gradient end
-  static const Color surface = Color(0xFF1E2E4A);           // card / elevated
-  static const Color surfaceLight = Color(0xFF263754);       // lighter surface
-  static const Color primary = Color(0xFFF5A623);            // warm amber/gold
-  static const Color primaryLight = Color(0xFFFFD166);       // light gold
-  static const Color accent = Color(0xFFF5A623);             // amber (same as primary for consistency)
-  static const Color success = Color(0xFF4ECDC4);            // mint green
+  // ── Core palette — Dark Premium (Fintech-style) ────────────────────────────
+  static const Color background = Color(0xFF0F172A);       // deep slate
+  static const Color backgroundLight = Color(0xFF1E293B);   // gradient end
+  static const Color surface = Color(0xFF1E293B);           // card / elevated
+  static const Color surfaceLight = Color(0xFF334155);       // lighter surface
+  static const Color primary = Color(0xFF22D3EE);            // neon cyan
+  static const Color primaryLight = Color(0xFF67E8F9);       // light cyan
+  static const Color accent = Color(0xFFA78BFA);             // soft violet
+  static const Color success = Color(0xFF34D399);            // emerald
   static const Color danger = Color(0xFFFF6B6B);             // soft coral
-  static const Color textPrimary = Color(0xE6FFFFFF);        // white @ 90%
-  static const Color textSecondary = Color(0xFF8899AA);      // muted blue-grey
+  static const Color textPrimary = Color(0xFFF1F5F9);        // near-white
+  static const Color textSecondary = Color(0xFF94A3B8);      // slate grey
 
   // Legacy aliases
   static const Color green = success;
@@ -25,23 +25,23 @@ class AppTheme {
   static const Color glassFill = Color(0x0FFFFFFF);
   static const Color glassBorder = Color(0x1EFFFFFF);
   static const Color glassBorderTop = Color(0x2DFFFFFF);
-  static const Color glassNavFill = Color(0xBF1A2744);
+  static const Color glassNavFill = Color(0xBF1E293B);
 
   // ── Gradients ─────────────────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFF5A623), Color(0xFFFFD166)],
+    colors: [Color(0xFF22D3EE), Color(0xFFA78BFA)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient backgroundGradient = LinearGradient(
-    colors: [Color(0xFF0F1B2D), Color(0xFF1A2744)],
+    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const SweepGradient profileRingGradient = SweepGradient(
-    colors: [primary, primaryLight, Color(0xFFFF8F5E), primary],
+    colors: [primary, primaryLight, accent, primary],
   );
 
   // ── Typography helpers ────────────────────────────────────────────────────

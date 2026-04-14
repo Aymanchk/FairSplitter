@@ -1,15 +1,50 @@
 import 'package:flutter/foundation.dart';
 import '../models/bill_item.dart';
 import '../models/person.dart';
+import '../models/expense_category.dart';
+
+enum SplitMode { byItems, equal, percentage, shares }
+
+enum Currency { kgs, usd, eur, rub, kzt }
+
+extension CurrencyExt on Currency {
+  String get symbol {
+    switch (this) {
+      case Currency.kgs: return 'сом';
+      case Currency.usd: return '\$';
+      case Currency.eur: return '€';
+      case Currency.rub: return '₽';
+      case Currency.kzt: return '₸';
+    }
+  }
+
+  String get code {
+    switch (this) {
+      case Currency.kgs: return 'KGS';
+      case Currency.usd: return 'USD';
+      case Currency.eur: return 'EUR';
+      case Currency.rub: return 'RUB';
+      case Currency.kzt: return 'KZT';
+    }
+  }
+}
 
 class BillProvider extends ChangeNotifier {
   final List<BillItem> _items = [];
   final List<Person> _people = [];
-  double _serviceChargePercent = 10.0;
-  bool _serviceChargeEnabled = true;
+  double _serviceChargePercent = 0.0;
+  bool _serviceChargeEnabled = false;
   final Map<String, Set<String>> _assignments = {};
   int _nextItemId = 0;
   int _nextPersonId = 0;
+  ExpenseCategory _category = ExpenseCategory.all.last; // default: Прочее
+  SplitMode _splitMode = SplitMode.byItems;
+  Currency _currency = Currency.kgs;
+  String _billTitle = '';
+
+  // Percentage/shares maps: personId -> value
+  final Map<String, double> _percentages = {};
+  final Map<String, int> _shares = {};
 
   List<BillItem> get items => List.unmodifiable(_items);
   List<Person> get people => List.unmodifiable(_people);
@@ -17,6 +52,12 @@ class BillProvider extends ChangeNotifier {
   bool get serviceChargeEnabled => _serviceChargeEnabled;
   Map<String, Set<String>> get assignments =>
       _assignments.map((k, v) => MapEntry(k, Set.unmodifiable(v)));
+  ExpenseCategory get category => _category;
+  SplitMode get splitMode => _splitMode;
+  Currency get currency => _currency;
+  String get billTitle => _billTitle;
+  Map<String, double> get percentages => Map.unmodifiable(_percentages);
+  Map<String, int> get shares => Map.unmodifiable(_shares);
 
   double get subtotal => _items.fold(0.0, (sum, item) => sum + item.price);
 
@@ -24,6 +65,44 @@ class BillProvider extends ChangeNotifier {
       _serviceChargeEnabled ? subtotal * _serviceChargePercent / 100 : 0;
 
   double get total => subtotal + serviceChargeAmount;
+
+  int get totalShares => _shares.values.fold(0, (sum, s) => sum + s);
+
+  // --- Category ---
+
+  void setCategory(ExpenseCategory cat) {
+    _category = cat;
+    // Apply default service charge for category
+    if (cat.defaultServicePercent > 0) {
+      _serviceChargeEnabled = true;
+      _serviceChargePercent = cat.defaultServicePercent;
+    } else {
+      _serviceChargeEnabled = false;
+      _serviceChargePercent = 0.0;
+    }
+    notifyListeners();
+  }
+
+  // --- Split Mode ---
+
+  void setSplitMode(SplitMode mode) {
+    _splitMode = mode;
+    notifyListeners();
+  }
+
+  // --- Currency ---
+
+  void setCurrency(Currency c) {
+    _currency = c;
+    notifyListeners();
+  }
+
+  // --- Title ---
+
+  void setBillTitle(String title) {
+    _billTitle = title;
+    notifyListeners();
+  }
 
   // --- Items ---
 
@@ -72,6 +151,8 @@ class BillProvider extends ChangeNotifier {
     for (final set in _assignments.values) {
       set.remove(personId);
     }
+    _percentages.remove(personId);
+    _shares.remove(personId);
     notifyListeners();
   }
 
@@ -112,6 +193,20 @@ class BillProvider extends ChangeNotifier {
     }).toList();
   }
 
+  // --- Percentages ---
+
+  void setPersonPercentage(String personId, double pct) {
+    _percentages[personId] = pct;
+    notifyListeners();
+  }
+
+  // --- Shares ---
+
+  void setPersonShares(String personId, int count) {
+    _shares[personId] = count;
+    notifyListeners();
+  }
+
   // --- Service Charge ---
 
   void setServiceChargePercent(double percent) {
@@ -127,14 +222,31 @@ class BillProvider extends ChangeNotifier {
   // --- Calculations ---
 
   double getPersonSubtotal(String personId) {
-    double sum = 0;
-    for (final entry in _assignments.entries) {
-      if (entry.value.contains(personId)) {
-        final item = _items.firstWhere((i) => i.id == entry.key);
-        sum += item.price / entry.value.length;
-      }
+    switch (_splitMode) {
+      case SplitMode.equal:
+        if (_people.isEmpty) return 0;
+        return subtotal / _people.length;
+
+      case SplitMode.percentage:
+        final pct = _percentages[personId] ?? 0;
+        return subtotal * pct / 100;
+
+      case SplitMode.shares:
+        final personShares = _shares[personId] ?? 1;
+        final total = totalShares;
+        if (total == 0) return 0;
+        return subtotal * personShares / total;
+
+      case SplitMode.byItems:
+        double sum = 0;
+        for (final entry in _assignments.entries) {
+          if (entry.value.contains(personId)) {
+            final item = _items.firstWhere((i) => i.id == entry.key);
+            sum += item.price / entry.value.length;
+          }
+        }
+        return sum;
     }
-    return sum;
   }
 
   double getPersonTotal(String personId) {
@@ -157,12 +269,27 @@ class BillProvider extends ChangeNotifier {
   void reset({bool keepPeople = false}) {
     _items.clear();
     _assignments.clear();
-    _serviceChargePercent = 10.0;
-    _serviceChargeEnabled = true;
     _nextItemId = 0;
+    _splitMode = SplitMode.byItems;
+    _percentages.clear();
+    _shares.clear();
     if (!keepPeople) {
       _people.clear();
       _nextPersonId = 0;
+      _billTitle = '';
+      _serviceChargePercent = 0.0;
+      _serviceChargeEnabled = false;
+      _category = ExpenseCategory.all.last;
+      _currency = Currency.kgs;
+    } else {
+      // Re-apply category default service charge
+      if (_category.defaultServicePercent > 0) {
+        _serviceChargeEnabled = true;
+        _serviceChargePercent = _category.defaultServicePercent;
+      } else {
+        _serviceChargeEnabled = false;
+        _serviceChargePercent = 0.0;
+      }
     }
     notifyListeners();
   }

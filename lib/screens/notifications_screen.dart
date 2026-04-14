@@ -32,17 +32,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Positioned(
               top: -40,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 160),
             ),
             Positioned(
               bottom: 100,
               left: -30,
-              child: _Blob(color: const Color(0xFFFFD166), size: 110),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 110),
             ),
             Positioned(
               top: 80,
               left: -20,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 80),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 80),
             ),
             SafeArea(
               child: Column(
@@ -153,7 +153,7 @@ class _NotifCard extends StatelessWidget {
         iconColor = AppTheme.danger;
       case 'new_message':
         icon = Icons.chat_bubble_rounded;
-        iconColor = const Color(0xFFFFD166);
+        iconColor = const Color(0xFF67E8F9);
       default:
         icon = Icons.notifications_rounded;
         iconColor = AppTheme.textSecondary;

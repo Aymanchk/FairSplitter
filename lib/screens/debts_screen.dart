@@ -7,6 +7,8 @@ import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/liquid_glass.dart';
 
+const _defaultCurrencySymbol = 'сом';
+
 class DebtsScreen extends StatefulWidget {
   const DebtsScreen({super.key});
 
@@ -139,8 +141,8 @@ class _DebtsScreenState extends State<DebtsScreen>
                                     const SizedBox(height: 4),
                                     Text(
                                       isPos
-                                          ? '+ ${amount.abs().toStringAsFixed(0)} сом'
-                                          : '− ${amount.abs().toStringAsFixed(0)} сом',
+                                          ? '+ ${amount.abs().toStringAsFixed(0)} $_defaultCurrencySymbol'
+                                          : '− ${amount.abs().toStringAsFixed(0)} $_defaultCurrencySymbol',
                                       style: AppTheme.moneyStyle(fontSize: 14).copyWith(
                                         color: isPos
                                             ? AppTheme.success
@@ -340,7 +342,7 @@ class _DebtsScreenState extends State<DebtsScreen>
                 TextField(
                   controller: amountCtrl,
                   decoration: const InputDecoration(
-                    hintText: 'Сумма (сом)',
+                    hintText: 'Сумма ($_defaultCurrencySymbol)',
                     prefixIcon: Icon(Icons.payments_rounded),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -432,7 +434,7 @@ class _DebtsScreenState extends State<DebtsScreen>
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Text(
-              '${amount.toStringAsFixed(0)} сом',
+              '${amount.toStringAsFixed(0)} $_defaultCurrencySymbol',
               style: AppTheme.moneyStyle(fontSize: 30).copyWith(
                 color: AppTheme.success,
               ),
@@ -600,7 +602,7 @@ class _DebtCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${amount.toStringAsFixed(0)} сом',
+                    '${amount.toStringAsFixed(0)} $_defaultCurrencySymbol',
                     style: AppTheme.moneyStyle(fontSize: 17).copyWith(
                       color: isIOwe ? AppTheme.danger : AppTheme.success,
                     ),

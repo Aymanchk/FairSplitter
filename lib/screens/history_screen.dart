@@ -2,8 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
+import '../models/expense_category.dart';
 import '../theme/app_theme.dart';
 import '../widgets/liquid_glass.dart';
+
+String _currencySymbol(Map<String, dynamic> bill) {
+  final code = bill['currency']?.toString();
+  if (code == null) return 'сом';
+  for (final c in Currency.values) {
+    if (c.code == code) return c.symbol;
+  }
+  return 'сом';
+}
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -82,17 +93,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Positioned(
               top: -50,
               right: -40,
-              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 180),
             ),
             Positioned(
               bottom: 120,
               left: -30,
-              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 120),
             ),
             Positioned(
               top: 200,
               left: -50,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 100),
             ),
             SafeArea(
               child: Column(
@@ -236,7 +247,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         style: TextStyle(
                             color: AppTheme.textSecondary, fontSize: 15)),
                     Text(
-                      '${total.toStringAsFixed(0)} сом',
+                      '${total.toStringAsFixed(0)} ${_currencySymbol(bill)}',
                       style: AppTheme.moneyStyle(fontSize: 22),
                     ),
                   ],
@@ -268,7 +279,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             style: const TextStyle(
                                 color: AppTheme.textSecondary)),
                         Text(
-                          '${(item['price'] as num?)?.toStringAsFixed(0) ?? '0'} сом',
+                          '${(item['price'] as num?)?.toStringAsFixed(0) ?? '0'} ${_currencySymbol(bill)}',
                           style: const TextStyle(
                               color: AppTheme.textPrimary),
                         ),
@@ -321,7 +332,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         Text(
-                          '${personTotal.toStringAsFixed(0)} сом',
+                          '${personTotal.toStringAsFixed(0)} ${_currencySymbol(bill)}',
                           style: AppTheme.moneyStyle(fontSize: 12),
                         ),
                       ],
@@ -392,6 +403,16 @@ class _BillCard extends StatelessWidget {
   const _BillCard(
       {required this.bill, required this.onTap, required this.onDelete});
 
+  ExpenseCategory? get _cat {
+    final catId = bill['category']?.toString();
+    if (catId == null) return null;
+    try {
+      return ExpenseCategory.findById(catId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final total = (bill['total'] as num?)?.toDouble() ?? 0;
@@ -399,6 +420,7 @@ class _BillCard extends StatelessWidget {
     final items = List.from(bill['items'] ?? []);
     final title = bill['title']?.toString();
     final createdAt = bill['created_at']?.toString();
+    final cat = _cat;
 
     String dateStr = '';
     if (createdAt != null) {
@@ -426,13 +448,13 @@ class _BillCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border(
             left: BorderSide(
-              color: AppTheme.primary,
+              color: cat?.color ?? AppTheme.primary,
               width: 3,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.06),
+              color: (cat?.color ?? AppTheme.primary).withValues(alpha: 0.06),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -448,11 +470,14 @@ class _BillCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.12),
+                      color: (cat?.color ?? AppTheme.primary).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.receipt_long_rounded,
-                        color: AppTheme.primary, size: 22),
+                    child: Icon(
+                      cat?.icon ?? Icons.receipt_long_rounded,
+                      color: cat?.color ?? AppTheme.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -477,7 +502,7 @@ class _BillCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${total.toStringAsFixed(0)} сом',
+                    '${total.toStringAsFixed(0)} ${_currencySymbol(bill)}',
                     style: AppTheme.moneyStyle(fontSize: 16),
                   ),
                 ],
@@ -485,7 +510,7 @@ class _BillCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Icon(Icons.restaurant_menu_rounded,
+                  Icon(Icons.receipt_long_rounded,
                       size: 13,
                       color: AppTheme.textSecondary.withValues(alpha: 0.6)),
                   const SizedBox(width: 4),
@@ -544,7 +569,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.restaurant_rounded, size: 52, color: AppTheme.primary),
+          const Icon(Icons.receipt_long_rounded, size: 52, color: AppTheme.primary),
           const SizedBox(height: 14),
           Text('Счетов пока нет',
               style: AppTheme.headingStyle(fontSize: 17)),

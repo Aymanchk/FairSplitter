@@ -9,6 +9,13 @@ import '../widgets/liquid_glass.dart';
 import '../utils/ocr_helper.dart';
 import 'summary_screen.dart';
 
+const _splitModeLabels = {
+  SplitMode.byItems: 'По позициям',
+  SplitMode.equal: 'Поровну',
+  SplitMode.percentage: 'Проценты',
+  SplitMode.shares: 'Доли',
+};
+
 class SplitScreen extends StatefulWidget {
   const SplitScreen({super.key});
 
@@ -33,20 +40,20 @@ class _SplitScreenState extends State<SplitScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Добавить блюдо'),
+        title: const Text('Добавить позицию'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(hintText: 'Название блюда'),
+              decoration: const InputDecoration(hintText: 'Название'),
               textCapitalization: TextCapitalization.sentences,
               autofocus: true,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: priceCtrl,
-              decoration: const InputDecoration(hintText: 'Цена (сом)'),
+              decoration: const InputDecoration(hintText: 'Цена'),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
@@ -73,6 +80,88 @@ class _SplitScreenState extends State<SplitScreen>
             child: const Text('Добавить'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCurrencyPicker(BuildContext context, BillProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Валюта',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...Currency.values.map((c) {
+                final isActive = provider.currency == c;
+                return ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppTheme.primary.withValues(alpha: 0.15)
+                          : AppTheme.surfaceLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        c.symbol,
+                        style: TextStyle(
+                          color: isActive
+                              ? AppTheme.primary
+                              : AppTheme.textSecondary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    c.code,
+                    style: TextStyle(
+                      color: isActive
+                          ? AppTheme.primary
+                          : AppTheme.textPrimary,
+                      fontWeight:
+                          isActive ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: isActive
+                      ? const Icon(Icons.check_rounded,
+                          color: AppTheme.primary, size: 20)
+                      : null,
+                  onTap: () {
+                    provider.setCurrency(c);
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -113,7 +202,7 @@ class _SplitScreenState extends State<SplitScreen>
               ),
               _ScanOption(
                 icon: Icons.photo_library_rounded,
-                color: const Color(0xFFFF8F5E),
+                color: const Color(0xFFA78BFA),
                 title: 'Галерея',
                 subtitle: 'Выбрать фото чека',
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
@@ -165,7 +254,7 @@ class _SplitScreenState extends State<SplitScreen>
             Positioned(
               top: -40,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 160),
             ),
             SafeArea(
               child: Consumer<BillProvider>(
@@ -203,33 +292,133 @@ class _SplitScreenState extends State<SplitScreen>
                                 ),
                               ),
                             ),
+                            // Category badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: provider.category.color
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(provider.category.icon,
+                                      size: 13,
+                                      color: provider.category.color),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    provider.category.name,
+                                    style: TextStyle(
+                                      color: provider.category.color,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
+
+                      // ── Split mode tabs ─────────────────────────────
+                      SizedBox(
+                        height: 38,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          children: SplitMode.values.map((mode) {
+                            final isActive = provider.splitMode == mode;
+                            return GestureDetector(
+                              onTap: () => provider.setSplitMode(mode),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.only(right: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? AppTheme.primary
+                                      : AppTheme.surface,
+                                  borderRadius: BorderRadius.circular(50),
+                                  border: Border.all(
+                                    color: isActive
+                                        ? AppTheme.primary
+                                        : Colors.white
+                                            .withValues(alpha: 0.08),
+                                  ),
+                                ),
+                                child: Text(
+                                  _splitModeLabels[mode]!,
+                                  style: TextStyle(
+                                    color: isActive
+                                        ? const Color(0xFF1A1A1A)
+                                        : AppTheme.textSecondary,
+                                    fontSize: 13,
+                                    fontWeight: isActive
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
 
                       // ── Floating total pill ──────────────────────────
                       Center(
-                        child: LiquidGlass(
-                          borderRadius: BorderRadius.circular(50),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          child: Column(
-                            children: [
-                              Text(
-                                '${provider.total.toStringAsFixed(0)} сом',
-                                style: AppTheme.moneyStyle(fontSize: 22),
-                              ),
-                              if (provider.serviceChargeEnabled)
-                                Text(
-                                  'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppTheme.textSecondary,
-                                  ),
+                        child: GestureDetector(
+                          onTap: () => _showCurrencyPicker(context, provider),
+                          child: LiquidGlass(
+                            borderRadius: BorderRadius.circular(50),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${provider.total.toStringAsFixed(0)} ${provider.currency.symbol}',
+                                      style: AppTheme.moneyStyle(fontSize: 22),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surfaceLight,
+                                        borderRadius:
+                                            BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        provider.currency.code,
+                                        style: const TextStyle(
+                                          color: AppTheme.textSecondary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                            ],
+                                if (provider.serviceChargeEnabled)
+                                  Text(
+                                    'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -263,7 +452,7 @@ class _SplitScreenState extends State<SplitScreen>
                                     child: _ActionButton(
                                       icon: Icons.camera_alt_rounded,
                                       label: 'Скан чека',
-                                      color: const Color(0xFFFF8F5E),
+                                      color: const Color(0xFFA78BFA),
                                       onTap: _scanReceipt,
                                     ),
                                   ),
@@ -275,7 +464,7 @@ class _SplitScreenState extends State<SplitScreen>
                               Row(
                                 children: [
                                   Text(
-                                    'Блюда (${provider.items.length})',
+                                    'Позиции (${provider.items.length})',
                                     style: const TextStyle(
                                       color: AppTheme.textPrimary,
                                       fontSize: 16,
@@ -321,36 +510,51 @@ class _SplitScreenState extends State<SplitScreen>
 
                               const SizedBox(height: 20),
 
-                              // ── Drop targets ───────────────────────
-                              if (provider.people.isNotEmpty) ...[
-                                const Text(
-                                  'Перетащите блюда на участников',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 13,
+                              // ── Mode-specific UI ──────────────────────
+                              if (provider.splitMode == SplitMode.byItems) ...[
+                                // ── Drop targets ───────────────────────
+                                if (provider.people.isNotEmpty) ...[
+                                  const Text(
+                                    'Перетащите позиции на участников',
+                                    style: TextStyle(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                                _PeopleDropRow(provider: provider),
-                              ],
+                                  const SizedBox(height: 12),
+                                  _PeopleDropRow(provider: provider),
+                                ],
 
-                              if (unassignedTotal > 0) ...[
-                                const SizedBox(height: 12),
-                                Center(
-                                  child: LiquidGlass(
-                                    borderRadius: BorderRadius.circular(50),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 10),
-                                    child: Text(
-                                      'Осталось: ${unassignedTotal.toStringAsFixed(0)} сом',
-                                      style: const TextStyle(
-                                        color: AppTheme.accent,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                                if (unassignedTotal > 0) ...[
+                                  const SizedBox(height: 12),
+                                  Center(
+                                    child: LiquidGlass(
+                                      borderRadius: BorderRadius.circular(50),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 10),
+                                      child: Text(
+                                        'Осталось: ${unassignedTotal.toStringAsFixed(0)} ${provider.currency.symbol}',
+                                        style: const TextStyle(
+                                          color: AppTheme.accent,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
+                              ] else if (provider.splitMode == SplitMode.equal) ...[
+                                // ── Equal split ───────────────────────
+                                if (provider.people.isNotEmpty && provider.items.isNotEmpty)
+                                  _EqualSplitPreview(provider: provider),
+                              ] else if (provider.splitMode == SplitMode.percentage) ...[
+                                // ── Percentage split ──────────────────
+                                if (provider.people.isNotEmpty)
+                                  _PercentageSplitEditor(provider: provider),
+                              ] else if (provider.splitMode == SplitMode.shares) ...[
+                                // ── Shares split ──────────────────────
+                                if (provider.people.isNotEmpty)
+                                  _SharesSplitEditor(provider: provider),
                               ],
 
                               const SizedBox(height: 24),
@@ -362,7 +566,8 @@ class _SplitScreenState extends State<SplitScreen>
                       // ── Bottom button ────────────────────────────────
                       _BottomBar(
                         enabled: provider.items.isNotEmpty &&
-                            provider.unassignedItems.isEmpty,
+                            (provider.splitMode != SplitMode.byItems ||
+                                provider.unassignedItems.isEmpty),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                               builder: (_) => const SummaryScreen()),
@@ -484,7 +689,7 @@ class _ItemTile extends StatelessWidget {
             ],
           ),
           child: Text(
-            '${item.name}  ${item.price.toStringAsFixed(0)} сом',
+            '${item.name}  ${item.price.toStringAsFixed(0)} ${provider.currency.symbol}',
             style: const TextStyle(
                 color: Color(0xFF1A1A1A), fontWeight: FontWeight.w600),
           ),
@@ -571,7 +776,7 @@ class _ItemTile extends StatelessWidget {
               ),
             ),
           Text(
-            '${item.price.toStringAsFixed(0)} сом',
+            '${item.price.toStringAsFixed(0)} ${provider.currency.symbol}',
             style: const TextStyle(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
@@ -633,14 +838,14 @@ class _PeopleDropRow extends StatelessWidget {
                             : person.avatarColor.withValues(alpha: 0.75),
                         border: Border.all(
                           color: hovering
-                              ? const Color(0xFFFFD166)
+                              ? const Color(0xFF67E8F9)
                               : person.avatarColor,
                           width: hovering ? 3 : 2,
                         ),
                         boxShadow: hovering
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFFF5A623)
+                                  color: const Color(0xFF22D3EE)
                                       .withValues(alpha: 0.6),
                                   blurRadius: 20,
                                   spreadRadius: 3,
@@ -667,7 +872,7 @@ class _PeopleDropRow extends StatelessWidget {
                     ),
                     if (personTotal > 0)
                       Text(
-                        '${personTotal.toStringAsFixed(0)} с',
+                        '${personTotal.toStringAsFixed(0)} ${provider.currency.symbol}',
                         style: const TextStyle(
                           color: AppTheme.accent,
                           fontSize: 11,
@@ -848,14 +1053,354 @@ class _EmptyItemsState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: const Column(
         children: [
-          Icon(Icons.restaurant_rounded, size: 40, color: AppTheme.primary),
+          Icon(Icons.receipt_long_rounded, size: 40, color: AppTheme.primary),
           SizedBox(height: 12),
           Text(
-            'Пока тут пусто. Время ужинать?\nДобавьте блюда или сканируйте чек',
+            'Пока тут пусто\nДобавьте позиции или сканируйте чек',
             textAlign: TextAlign.center,
             style:
                 TextStyle(color: AppTheme.textSecondary, fontSize: 14),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EqualSplitPreview extends StatelessWidget {
+  final BillProvider provider;
+  const _EqualSplitPreview({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final perPerson = provider.people.isEmpty
+        ? 0.0
+        : provider.total / provider.people.length;
+    final sym = provider.currency.symbol;
+
+    return LiquidGlass(
+      borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.balance_rounded, size: 18, color: AppTheme.accent),
+              SizedBox(width: 8),
+              Text(
+                'Поровну',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...provider.people.map((person) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: person.avatarColor,
+                    child: Text(
+                      person.name[0].toUpperCase(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      person.name,
+                      style: const TextStyle(
+                          color: AppTheme.textPrimary, fontSize: 14),
+                    ),
+                  ),
+                  Text(
+                    '${perPerson.toStringAsFixed(0)} $sym',
+                    style: AppTheme.moneyStyle(fontSize: 15).copyWith(
+                      color: person.avatarColor,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _PercentageSplitEditor extends StatelessWidget {
+  final BillProvider provider;
+  const _PercentageSplitEditor({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final sym = provider.currency.symbol;
+    final totalPct = provider.percentages.values
+        .fold<double>(0, (s, v) => s + v);
+
+    return LiquidGlass(
+      borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.pie_chart_rounded,
+                  size: 18, color: AppTheme.accent),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Проценты',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (totalPct - 100).abs() < 0.5
+                      ? AppTheme.success.withValues(alpha: 0.15)
+                      : AppTheme.danger.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${totalPct.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: (totalPct - 100).abs() < 0.5
+                        ? AppTheme.success
+                        : AppTheme.danger,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...provider.people.map((person) {
+            final pct = provider.percentages[person.id] ?? 0;
+            final amount = provider.getPersonTotal(person.id);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: person.avatarColor,
+                    child: Text(
+                      person.name[0].toUpperCase(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(person.name,
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary, fontSize: 13)),
+                        Text(
+                          '${amount.toStringAsFixed(0)} $sym',
+                          style: TextStyle(
+                            color: person.avatarColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 70,
+                    height: 36,
+                    child: TextField(
+                      onChanged: (v) {
+                        final val = double.tryParse(v) ?? 0;
+                        provider.setPersonPercentage(person.id, val);
+                      },
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: AppTheme.textPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: '${pct.toStringAsFixed(0)}',
+                        suffixText: '%',
+                        suffixStyle: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.1)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _SharesSplitEditor extends StatelessWidget {
+  final BillProvider provider;
+  const _SharesSplitEditor({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final sym = provider.currency.symbol;
+
+    return LiquidGlass(
+      borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.grid_view_rounded,
+                  size: 18, color: AppTheme.accent),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Доли',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                'Всего: ${provider.totalShares}',
+                style: const TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...provider.people.map((person) {
+            final s = provider.shares[person.id] ?? 1;
+            final amount = provider.getPersonTotal(person.id);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: person.avatarColor,
+                    child: Text(
+                      person.name[0].toUpperCase(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(person.name,
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary, fontSize: 13)),
+                        Text(
+                          '${amount.toStringAsFixed(0)} $sym',
+                          style: TextStyle(
+                            color: person.avatarColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: s > 1
+                            ? () => provider.setPersonShares(
+                                person.id, s - 1)
+                            : null,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: Colors.white
+                                    .withValues(alpha: 0.08)),
+                          ),
+                          child: Icon(Icons.remove_rounded,
+                              size: 16,
+                              color: s > 1
+                                  ? AppTheme.textPrimary
+                                  : AppTheme.textSecondary
+                                      .withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 36,
+                        child: Center(
+                          child: Text(
+                            '$s',
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => provider.setPersonShares(
+                            person.id, s + 1),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: AppTheme.primary
+                                    .withValues(alpha: 0.3)),
+                          ),
+                          child: const Icon(Icons.add_rounded,
+                              size: 16, color: AppTheme.primary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

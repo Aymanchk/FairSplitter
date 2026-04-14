@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
+import '../providers/bill_provider.dart';
 import '../providers/debt_provider.dart';
+import '../models/expense_category.dart';
 import '../theme/app_theme.dart';
 import '../widgets/liquid_glass.dart';
 import 'add_people_screen.dart';
@@ -67,16 +69,16 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: Stack(
           children: [
-            // Warm ambient blobs
+            // Cool ambient blobs
             Positioned(
               top: -60,
               right: -40,
-              child: _Blob(color: const Color(0xFFF5A623), size: 200),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 200),
             ),
             Positioned(
               top: 200,
               left: -50,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 160),
             ),
 
             SafeArea(
@@ -122,30 +124,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    // Quick Actions — two large glassmorphism cards
+                    // Quick Actions — three action cards
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: _QuickActionCard(
-                                icon: Icons.receipt_long_rounded,
-                                label: 'Новый счёт',
-                                gradient: AppTheme.primaryGradient,
-                                onTap: _openNewBill,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _QuickActionCard(
-                                icon: Icons.camera_alt_rounded,
-                                label: 'Сканировать чек',
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFFFF8F5E), Color(0xFFFFBE76)],
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _QuickActionCard(
+                                    icon: Icons.receipt_long_rounded,
+                                    label: 'Новый счёт',
+                                    gradient: AppTheme.primaryGradient,
+                                    onTap: _openNewBill,
+                                  ),
                                 ),
-                                onTap: _openNewBill,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _QuickActionCard(
+                                    icon: Icons.camera_alt_rounded,
+                                    label: 'Сканировать чек',
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFA78BFA), Color(0xFFC4B5FD)],
+                                    ),
+                                    onTap: _openNewBill,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _QuickActionCard(
+                              icon: Icons.flash_on_rounded,
+                              label: 'Быстрый сплит — разделить поровну',
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF34D399), Color(0xFF22D3EE)],
                               ),
+                              onTap: _openNewBill,
+                              isWide: true,
                             ),
                           ],
                         ),
@@ -290,16 +306,62 @@ class _QuickActionCard extends StatelessWidget {
   final String label;
   final Gradient gradient;
   final VoidCallback onTap;
+  final bool isWide;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.gradient,
     required this.onTap,
+    this.isWide = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isWide) {
+      return LiquidGlass(
+        borderRadius: BorderRadius.circular(20),
+        interactive: true,
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, size: 22, color: const Color(0xFF1A1A1A)),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(Icons.arrow_forward_rounded,
+                size: 18, color: AppTheme.textSecondary),
+          ],
+        ),
+      );
+    }
+
     return LiquidGlass(
       borderRadius: BorderRadius.circular(20),
       interactive: true,
@@ -345,12 +407,32 @@ class _BillCard extends StatelessWidget {
   final Map<String, dynamic> bill;
   const _BillCard({required this.bill});
 
+  String _currSym() {
+    final code = bill['currency']?.toString();
+    if (code == null) return 'сом';
+    for (final c in Currency.values) {
+      if (c.code == code) return c.symbol;
+    }
+    return 'сом';
+  }
+
+  ExpenseCategory? _billCategory() {
+    final catId = bill['category']?.toString();
+    if (catId == null) return null;
+    try {
+      return ExpenseCategory.findById(catId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final total = (bill['total'] as num?)?.toDouble() ?? 0;
     final people = List.from(bill['people'] ?? []);
     final createdAt = bill['created_at']?.toString();
     final title = bill['title']?.toString();
+    final cat = _billCategory();
 
     String dateStr = '';
     if (createdAt != null) {
@@ -379,9 +461,9 @@ class _BillCard extends StatelessWidget {
         ],
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            left: BorderSide(color: AppTheme.primary, width: 3),
+            left: BorderSide(color: cat?.color ?? AppTheme.primary, width: 3),
           ),
         ),
         padding: const EdgeInsets.all(16),
@@ -391,11 +473,15 @@ class _BillCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.15),
+                color: (cat?.color ?? AppTheme.primary).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Icon(Icons.restaurant_rounded, size: 20, color: AppTheme.primary),
+                child: Icon(
+                  cat?.icon ?? Icons.receipt_long_rounded,
+                  size: 20,
+                  color: cat?.color ?? AppTheme.primary,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -429,7 +515,7 @@ class _BillCard extends StatelessWidget {
               ),
             ),
             Text(
-              '${total.toStringAsFixed(0)} сом',
+              '${total.toStringAsFixed(0)} ${_currSym()}',
               style: AppTheme.moneyStyle(fontSize: 16),
             ),
           ],
@@ -480,12 +566,12 @@ class _EmptyBillsState extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
         child: Column(
           children: [
-            const Icon(Icons.restaurant_rounded, size: 44, color: AppTheme.primary),
+            const Icon(Icons.receipt_long_rounded, size: 44, color: AppTheme.primary),
             const SizedBox(height: 10),
             Text('Пока тут пусто', style: AppTheme.headingStyle(fontSize: 17)),
             const SizedBox(height: 6),
             const Text(
-              'Время ужинать?\nРазделите первый счёт',
+              'Делим расходы?\nРазделите первый счёт',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),

@@ -24,19 +24,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   static const _slides = [
     _SlideData(
-      icon: Icons.restaurant_rounded,
-      title: 'Дели счёт, а не дружбу',
-      subtitle: 'Разделяйте расходы за ужин честно и без споров',
+      icon: Icons.account_balance_wallet_rounded,
+      title: 'Дели всё честно',
+      subtitle: 'Ресторан, продукты, поездка, аренда — разделяйте любые расходы без споров',
     ),
     _SlideData(
       icon: Icons.camera_alt_rounded,
-      title: 'Сфоткай чек — мы разберёмся',
-      subtitle: 'Сканируйте чек камерой, и мы распознаем все позиции',
+      title: 'Сканируй чек — мы разберёмся',
+      subtitle: 'Сфотографируйте любой чек, и мы распознаем все позиции',
     ),
     _SlideData(
       icon: Icons.payments_rounded,
       title: 'Каждый платит за своё',
-      subtitle: 'Отслеживайте долги и отправляйте напоминания друзьям',
+      subtitle: 'Отслеживайте долги и отправляйте результат друзьям',
     ),
   ];
 
@@ -90,21 +90,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: Stack(
           children: [
-            // Warm ambient blobs
+            // Cool ambient blobs
             Positioned(
               top: -80,
               left: -60,
-              child: _Blob(color: const Color(0xFFF5A623), size: 280),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 280),
             ),
             Positioned(
               top: 100,
               right: -80,
-              child: _Blob(color: const Color(0xFFFFD166), size: 220),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 220),
             ),
             Positioned(
               bottom: 60,
               left: 40,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 180),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 180),
             ),
 
             SafeArea(

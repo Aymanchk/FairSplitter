@@ -81,17 +81,17 @@ class _RegisterScreenState extends State<RegisterScreen>
             Positioned(
               top: -50,
               left: -40,
-              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 180),
             ),
             Positioned(
               bottom: -50,
               right: -40,
-              child: _Blob(color: const Color(0xFFFFD166), size: 160),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 160),
             ),
             Positioned(
               top: MediaQuery.of(context).size.height * 0.5,
               left: -20,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 100),
             ),
 
             SafeArea(

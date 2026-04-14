@@ -67,12 +67,12 @@ class _StatsScreenState extends State<StatsScreen>
             Positioned(
               top: -40,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 180),
             ),
             Positioned(
               bottom: 120,
               left: -40,
-              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 120),
             ),
             SafeArea(
               child: Column(
@@ -175,7 +175,7 @@ class _StatsScreenState extends State<StatsScreen>
                 icon: Icons.payments_rounded,
                 label: 'Потрачено',
                 value:
-                    '${(spent * _countController.value).toStringAsFixed(0)} с',
+                    '${(spent * _countController.value).toStringAsFixed(0)} сом',
                 color: AppTheme.success,
               );
             },
@@ -220,7 +220,7 @@ class _StatsScreenState extends State<StatsScreen>
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => AppTheme.surfaceLight,
                     getTooltipItem: (_, __, rod, ___) => BarTooltipItem(
-                      '${rod.toY.toStringAsFixed(0)} с',
+                      '${rod.toY.toStringAsFixed(0)} сом',
                       const TextStyle(
                           color: AppTheme.textPrimary, fontSize: 12),
                     ),
@@ -324,7 +324,7 @@ class _StatsScreenState extends State<StatsScreen>
                     getTooltipColor: (_) => AppTheme.surfaceLight,
                     getTooltipItems: (spots) => spots
                         .map((s) => LineTooltipItem(
-                              '${s.y.toStringAsFixed(0)} с',
+                              '${s.y.toStringAsFixed(0)} сом',
                               const TextStyle(
                                   color: AppTheme.textPrimary,
                                   fontSize: 12),
@@ -441,7 +441,7 @@ class _StatsScreenState extends State<StatsScreen>
             final progress = count / maxCount;
             const colors = [
               AppTheme.primary,
-              Color(0xFFFF8F5E),
+              Color(0xFFA78BFA),
               AppTheme.success,
               Color(0xFFFF6B6B),
               Color(0xFF7C5CFC),

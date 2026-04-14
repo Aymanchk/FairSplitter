@@ -39,12 +39,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
             Positioned(
               top: -40,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 160),
             ),
             Positioned(
               bottom: 100,
               left: -40,
-              child: _Blob(color: const Color(0xFFFFD166), size: 120),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 120),
             ),
             SafeArea(
               child: Column(

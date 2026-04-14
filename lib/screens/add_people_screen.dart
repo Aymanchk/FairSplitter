@@ -5,9 +5,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/bill_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
+import '../models/expense_category.dart';
 import '../theme/app_theme.dart';
 import '../widgets/liquid_glass.dart';
 import 'split_screen.dart';
+import 'quick_split_screen.dart';
 
 class AddPeopleScreen extends StatefulWidget {
   const AddPeopleScreen({super.key});
@@ -217,17 +219,17 @@ class _AddPeopleScreenState extends State<AddPeopleScreen>
             Positioned(
               top: -50,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 180),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 180),
             ),
             Positioned(
               bottom: 100,
               left: -40,
-              child: _Blob(color: const Color(0xFFFFD166), size: 140),
+              child: _Blob(color: const Color(0xFF67E8F9), size: 140),
             ),
             Positioned(
               bottom: 200,
               right: -20,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 100),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 100),
             ),
 
             SafeArea(
@@ -282,6 +284,87 @@ class _AddPeopleScreenState extends State<AddPeopleScreen>
                     ),
                   ),
 
+                  const SizedBox(height: 12),
+
+                  // ── Category picker ──────────────────────────────
+                  SizedBox(
+                    height: 44,
+                    child: Consumer<BillProvider>(
+                      builder: (_, bp, __) => ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: ExpenseCategory.all.length,
+                        itemBuilder: (_, i) {
+                          final cat = ExpenseCategory.all[i];
+                          final isActive = bp.category.id == cat.id;
+                          return GestureDetector(
+                            onTap: () => bp.setCategory(cat),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? cat.color.withValues(alpha: 0.2)
+                                    : AppTheme.surface,
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(
+                                  color: isActive
+                                      ? cat.color
+                                      : Colors.white.withValues(alpha: 0.08),
+                                  width: isActive ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(cat.icon,
+                                      size: 16,
+                                      color: isActive
+                                          ? cat.color
+                                          : AppTheme.textSecondary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    cat.name,
+                                    style: TextStyle(
+                                      color: isActive
+                                          ? cat.color
+                                          : AppTheme.textSecondary,
+                                      fontSize: 13,
+                                      fontWeight: isActive
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ── Bill title field ──────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      controller: _billNameController,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      decoration: const InputDecoration(
+                        hintText: 'Название счёта (необязательно)',
+                        prefixIcon: Icon(Icons.edit_note_rounded),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                      ),
+                      onChanged: (v) =>
+                          context.read<BillProvider>().setBillTitle(v.trim()),
+                    ),
+                  ),
+
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -294,7 +377,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // ── Search input ──────────────────────────────────
                   Padding(
@@ -472,89 +555,141 @@ class _AddPeopleScreenState extends State<AddPeopleScreen>
                           ),
                   ),
 
-                  // ── Next button ───────────────────────────────────
+                  // ── Bottom buttons ─────────────────────────────────
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(20, 8, 20, 16),
                     child: SafeArea(
                       top: false,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: _canProceed(provider)
-                            ? DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: AppTheme.primaryGradient,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.primary
-                                          .withValues(alpha: 0.4),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
-                                ),
-                                child: FilledButton(
-                                  onPressed: () {
-                                    provider.reset(keepPeople: true);
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => const SplitScreen(),
-                                      ),
-                                    );
-                                  },
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
+                      child: Column(
+                        children: [
+                          // Main: По позициям
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: _canProceed(provider)
+                                ? DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: AppTheme.primaryGradient,
                                       borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.primary
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        provider.reset(keepPeople: true);
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const SplitScreen(),
+                                          ),
+                                        );
+                                      },
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.list_alt_rounded,
+                                              size: 18,
+                                              color: Color(0xFF1A1A1A)),
+                                          SizedBox(width: 8),
+                                          Text('По позициям',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF1A1A1A),
+                                              )),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward_rounded,
+                                              size: 20,
+                                              color: Color(0xFF1A1A1A)),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : FilledButton(
+                                    onPressed: null,
+                                    style: FilledButton.styleFrom(
+                                      disabledBackgroundColor:
+                                          AppTheme.primary.withValues(alpha: 0.2),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.list_alt_rounded,
+                                            size: 18,
+                                            color: AppTheme.textSecondary),
+                                        SizedBox(width: 8),
+                                        Text('По позициям',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.textSecondary,
+                                            )),
+                                      ],
                                     ),
                                   ),
-                                  child: const Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Text('Далее',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1A1A),
-                                          )),
-                                      SizedBox(width: 8),
-                                      Icon(Icons.arrow_forward_rounded,
-                                          size: 20,
-                                          color: Color(0xFF1A1A1A)),
-                                    ],
+                          ),
+                          const SizedBox(height: 10),
+                          // Quick split button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: LiquidGlass(
+                              borderRadius: BorderRadius.circular(14),
+                              interactive: true,
+                              onTap: _canProceed(provider)
+                                  ? () {
+                                      provider.reset(keepPeople: true);
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const QuickSplitScreen(),
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              padding: EdgeInsets.zero,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.flash_on_rounded,
+                                      size: 18,
+                                      color: _canProceed(provider)
+                                          ? AppTheme.accent
+                                          : AppTheme.textSecondary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Быстрый сплит',
+                                    style: TextStyle(
+                                      color: _canProceed(provider)
+                                          ? AppTheme.accent
+                                          : AppTheme.textSecondary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              )
-                            : FilledButton(
-                                onPressed: null,
-                                style: FilledButton.styleFrom(
-                                  disabledBackgroundColor:
-                                      AppTheme.primary.withValues(alpha: 0.2),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.center,
-                                  children: [
-                                    Text('Далее',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.textSecondary,
-                                        )),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward_rounded,
-                                        size: 20,
-                                        color: AppTheme.textSecondary),
-                                  ],
-                                ),
+                                ],
                               ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

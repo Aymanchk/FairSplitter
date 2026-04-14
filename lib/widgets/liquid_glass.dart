@@ -122,7 +122,7 @@ class GlassPill extends StatelessWidget {
       interactive: onTap != null,
       onTap: onTap,
       fillColor: isActive
-          ? const Color(0xFFF5A623).withValues(alpha: 0.25)
+          ? const Color(0xFF22D3EE).withValues(alpha: 0.25)
           : null,
       padding: padding,
       child: child,
@@ -144,19 +144,19 @@ class GlassAmbientBackground extends StatelessWidget {
         Positioned(
           top: -60,
           left: -40,
-          child: _Blob(color: const Color(0xFFF5A623), size: 220),
+          child: _Blob(color: const Color(0xFF22D3EE), size: 220),
         ),
         // Peach blob — top-right
         Positioned(
           top: 40,
           right: -60,
-          child: _Blob(color: const Color(0xFFFFD166), size: 180),
+          child: _Blob(color: const Color(0xFF67E8F9), size: 180),
         ),
         // Coral blob — bottom-center
         Positioned(
           bottom: -40,
           left: 60,
-          child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
+          child: _Blob(color: const Color(0xFFA78BFA), size: 160),
         ),
         child,
       ],

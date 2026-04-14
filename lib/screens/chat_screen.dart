@@ -90,12 +90,12 @@ class _ChatScreenState extends State<ChatScreen> {
             Positioned(
               top: -50,
               right: -30,
-              child: _Blob(color: const Color(0xFFF5A623), size: 160),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 160),
             ),
             Positioned(
               bottom: 60,
               left: -40,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 120),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 120),
             ),
             SafeArea(
               child: Column(

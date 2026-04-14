@@ -62,6 +62,10 @@ class _SummaryScreenState extends State<SummaryScreen>
         items: provider.items.map((i) => {'name': i.name, 'price': i.price}).toList(),
         people: provider.people.map((p) => {'name': p.name, 'id': p.id}).toList(),
         assignments: provider.assignments.map((k, v) => MapEntry(k, v.toList())),
+        title: provider.billTitle,
+        category: provider.category.id,
+        currency: provider.currency.code,
+        splitMode: provider.splitMode.name,
       );
       if (mounted) {
         setState(() {
@@ -105,12 +109,12 @@ class _SummaryScreenState extends State<SummaryScreen>
             Positioned(
               top: -60,
               left: -40,
-              child: _Blob(color: const Color(0xFFF5A623), size: 220),
+              child: _Blob(color: const Color(0xFF22D3EE), size: 220),
             ),
             Positioned(
               bottom: 80,
               right: -50,
-              child: _Blob(color: const Color(0xFFFF8F5E), size: 160),
+              child: _Blob(color: const Color(0xFFA78BFA), size: 160),
             ),
 
             SafeArea(
@@ -131,13 +135,42 @@ class _SummaryScreenState extends State<SummaryScreen>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          'Итоги',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.4,
+                        const Expanded(
+                          child: Text(
+                            'Итоги',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                        ),
+                        // Category badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: provider.category.color
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(provider.category.icon,
+                                  size: 14,
+                                  color: provider.category.color),
+                              const SizedBox(width: 4),
+                              Text(
+                                provider.category.name,
+                                style: TextStyle(
+                                  color: provider.category.color,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -201,14 +234,14 @@ class _SummaryScreenState extends State<SummaryScreen>
                               child: Column(
                                 children: [
                                   Text(
-                                    '${_totalCountAnim.value.toStringAsFixed(0)} сом',
+                                    '${_totalCountAnim.value.toStringAsFixed(0)} ${provider.currency.symbol}',
                                     style: AppTheme.moneyStyle(fontSize: 36),
                                   ),
                                   if (provider.serviceChargeEnabled) ...[
                                     const SizedBox(height: 4),
                                     Text(
                                       'включая ${provider.serviceChargePercent.toStringAsFixed(0)}% обслуживания '
-                                      '(${provider.serviceChargeAmount.toStringAsFixed(0)} сом)',
+                                      '(${provider.serviceChargeAmount.toStringAsFixed(0)} ${provider.currency.symbol})',
                                       style: const TextStyle(
                                         color: AppTheme.textSecondary,
                                         fontSize: 12,
@@ -231,7 +264,7 @@ class _SummaryScreenState extends State<SummaryScreen>
                               children: [
                                 _StatChip(
                                   value: '${provider.items.length}',
-                                  label: 'Блюд',
+                                  label: 'Позиций',
                                 ),
                                 Container(
                                     width: 1,
@@ -478,7 +511,7 @@ class _PersonCard extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF5A623).withValues(alpha: 0.06),
+            color: const Color(0xFF22D3EE).withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -527,7 +560,7 @@ class _PersonCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${total.toStringAsFixed(0)} сом',
+                  '${total.toStringAsFixed(0)} ${provider.currency.symbol}',
                   style: AppTheme.moneyStyle(fontSize: 20).copyWith(
                     color: person.avatarColor,
                   ),
@@ -570,7 +603,7 @@ class _PersonCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${splitPrice.toStringAsFixed(0)} сом',
+                        '${splitPrice.toStringAsFixed(0)} ${provider.currency.symbol}',
                         style: const TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,
